@@ -4,39 +4,21 @@ import joblib
 import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
-import plotly.figure_factory as ff
 import warnings
 
-# Configurações de página
-st.set_page_config(page_title="Passos Mágicos - FIAP DATATHON F5", layout="wide", page_icon="🎯")
-warnings.filterwarnings("ignore")
-
 # ==============================================================================
-# 1. CARREGAMENTO DE DADOS E MODELO
+# CARREGAMENTO DE DADOS
 # ==============================================================================
 
-@st.cache_resource
-def load_model():
-    # Carregando o pipeline otimizado que criamos
-    return joblib.load('modelo_passos_magicos_otimizado.pkl')
+# 1. Base Bruta para as Abas 1 e 2 (Business Intelligence / Gráficos)
+# Substitua "final.xlsx" pelo nome real do seu arquivo original do Excel/CSV
+df = pd.read_excel("final.xlsx") 
 
-@st.cache_data
-def load_data():
-    # Carregue aqui a base gerada no nosso código anterior (df_modelagem exportada para CSV/Excel)
-    # Exemplo: df_modelagem.to_csv("base_modelagem.csv", index=False)
-    try:
-        df = pd.read_csv("base_modelagem.csv")
-    except:
-        # Fallback provisório caso o arquivo mude de nome ou formato
-        df = pd.DataFrame() 
-    return df
+# 2. Base Tratada para as Abas 3 e 4 (Machine Learning / Simulador)
+df_ml = pd.read_csv("base_modelagem.csv")
 
-try:
-    modelo = load_model()
-    df = load_data()
-except Exception as e:
-    st.error(f"❌ Erro de inicialização: Verifique os arquivos na pasta. Erro: {e}")
-    st.stop()
+# Carregamento do Modelo
+modelo = joblib.load("modelo_passos_magicos.pkl")
 
 # ==============================================================================
 # 2. MENU LATERAL - CONFIGURAÇÕES E INFORMAÇÕES
