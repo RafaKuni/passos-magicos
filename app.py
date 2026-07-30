@@ -271,7 +271,7 @@ with st.expander("3. Influência dos comportamentos no IPV ao longo do tempo"):
         
         st.plotly_chart(fig3, use_container_width=True)
 
-    with st.expander("4. Autoavaliação (IAA)"):
+with st.expander("4. Autoavaliação (IAA)"):
         st.markdown("""**Análise:** A análise da Autoavaliação (IAA) em relação aos dados reais traz um dos resultados mais curiosos: 
         existe uma baixíssima coerência entre como o aluno se percebe e seus resultados práticos, indicando que a percepção subjetiva nem sempre reflete o desempenho.""")
         df_iaa_data = df[['iaa', 'ida', 'ieg']].dropna()
@@ -289,7 +289,7 @@ with st.expander("3. Influência dos comportamentos no IPV ao longo do tempo"):
             fig_iaa_ieg.update_traces(marker=dict(color='orange'))
             st.plotly_chart(fig_iaa_ieg, use_container_width=True)
 
-    with st.expander("5. Aspectos psicossociais (IPS)"):
+with st.expander("5. Aspectos psicossociais (IPS)"):
         st.markdown("""**Análise:** Esta análise utiliza um atraso temporal (Lag) para entender como o suporte psicossocial do ano anterior 
         influencia o desempenho. Os dados indicam que o bem-estar emocional é um preditor relevante para o sucesso acadêmico futuro.""")
         df_lag = df.sort_values(['ra', 'ano_referencia'])
@@ -306,7 +306,7 @@ with st.expander("3. Influência dos comportamentos no IPV ao longo do tempo"):
             fig_ips_ida.update_traces(marker=dict(color='teal'))
             st.plotly_chart(fig_ips_ida, use_container_width=True)
 
-    with st.expander("6. Aspectos psicopedagógicos (IPP)"):
+with st.expander("6. Aspectos psicopedagógicos (IPP)"):
         st.markdown("""**Análise:** Esta análise de convergência busca entender se a avaliação psicopedagógica (IPP) reflete a 
         realidade da defasagem escolar (IAN).""")
         df_q6 = df.copy()
@@ -318,7 +318,7 @@ with st.expander("3. Influência dos comportamentos no IPV ao longo do tempo"):
         fig6.update_layout(xaxis_title="Status de Defasagem (IAN)", yaxis_title="Avaliação Psicopedagógica (IPP)", showlegend=False)
         st.plotly_chart(fig6, use_container_width=True)
 
-    with st.expander("7. Ponto de virada (IPV)"):
+with st.expander("7. Ponto de virada (IPV)"):
         st.markdown("**Análise:** O engajamento e o desempenho acadêmico são os principais motores para que o aluno atinja o 'Ponto de Virada'.")
         df_corr_data = df[['ipv', 'ida', 'ieg', 'ips', 'ipp']].dropna()
         df_importancia = df_corr_data.corr()['ipv'].sort_values(ascending=False).drop('ipv').reset_index()
@@ -335,7 +335,7 @@ with st.expander("3. Influência dos comportamentos no IPV ao longo do tempo"):
             fig_trend.update_traces(marker=dict(color='purple'))
             st.plotly_chart(fig_trend, use_container_width=True)
 
-    with st.expander("8. Multidimensionalidade dos indicadores"):
+with st.expander("8. Multidimensionalidade dos indicadores"):
         st.markdown("**Análise:** Quanto mais indicadores o aluno consegue manter acima da mediana, maior é a sua nota final, confirmando a visão holística do programa.")
         pilares = ['ida', 'ieg', 'ips', 'ipp']
         df_multi = df.copy()
@@ -349,10 +349,10 @@ with st.expander("3. Influência dos comportamentos no IPV ao longo do tempo"):
         fig8.update_layout(xaxis_title="Número de Indicadores Acima da Mediana", yaxis_title="Nota Global (INDE)", showlegend=False)
         st.plotly_chart(fig8, use_container_width=True)
 
-    with st.expander("9. Previsão de risco com ML"):
+with st.expander("9. Previsão de risco com ML"):
         st.markdown("**Análise:** O detalhamento do modelo de Inteligência Artificial, curva ROC e a Matriz de Confusão encontram-se na aba **Performance do Modelo**.")
 
-    with st.expander("10. Efetividade do programa"):
+with st.expander("10. Efetividade do programa"):
         st.markdown("**Análise:** A efetividade do programa é medida pela evolução conjunta dos indicadores à medida que o aluno progride entre as fases (Pedras).")
         fases_presentes = [f for f in ['Quartzo', 'Agata', 'Ametista', 'Topazio'] if f in df['pedra'].unique()]
         df_efetividade = df[df['pedra'].isin(fases_presentes)]
@@ -364,7 +364,7 @@ with st.expander("3. Influência dos comportamentos no IPV ao longo do tempo"):
         fig10.update_layout(title="Efetividade: Evolução dos Indicadores por Fase", xaxis_title="Fases (Pedra)", yaxis_title="Média dos Indicadores", yaxis=dict(range=[0, 10.5]), hovermode="x unified")
         st.plotly_chart(fig10, use_container_width=True)
 
-    with st.expander("11. Insights e criatividade"):
+with st.expander("11. Insights e criatividade"):
         st.markdown("**Análise:** Matriz estratégica cruza o Engajamento (IEG) com o Desempenho (IDA) para classificar os alunos em quadrantes comportamentais.")
         mediana_ida = df['ida'].median()
         mediana_ieg = df['ieg'].median()
