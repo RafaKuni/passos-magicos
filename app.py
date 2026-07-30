@@ -525,7 +525,7 @@ with st.expander("7. Ponto de Virada (IPV) - Quais comportamentos - acadêmicos,
         st.dataframe(corr_geral.set_index('Indicador').sort_values(by='Correlação', ascending=False).round(3), use_container_width=True)
 
 with st.expander("8. Multidimensionalidade dos indicadores - Quais combinações de indicadores (IDA + IEG + IPS + IPP) elevam mais a nota global do aluno (INDE)?"):
-       st.markdown("""
+st.markdown("""
         **Análise:** Avaliamos como o acúmulo de pilares de destaque (alunos que ficam acima da mediana 
         em IDA, IEG, IPS e IPP simultaneamente) impacta diretamente na sua Nota Global (INDE).
         """)
