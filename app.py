@@ -77,13 +77,13 @@ with st.sidebar:
 # 3. INTERFACE E NAVEGAÇÃO (TABS)
 # ==============================================================================
 
-st.title("🏹 Inteligência Preditiva - Associação Passos Mágicos")
+st.title("Datathon - Associação Passos Mágicos")
 
 aba1, aba2, aba3, aba4 = st.tabs([
-    "📊 Visão dos Dados", 
-    "❓ Questões Técnicas", 
-    "📈 Performance do Modelo Preditivo", 
-    "🔮 Simulador de Defasagem"
+    "Visão dos Dados", 
+    "Questões Técnicas", 
+    "Performance do Modelo Preditivo", 
+    "Simulador de Defasagem"
 ])
 
 # ==============================================================================
