@@ -7,37 +7,33 @@ import plotly.graph_objects as go
 import warnings
 
 # ==============================================================================
-# CARREGAMENTO DE DADOS
+# CARREGAMENTO E TRATAMENTO DE DADOS PARA OS GRÁFICOS
 # ==============================================================================
-# 1. Carregando a base
-df = pd.read_csv("PEDE_Consolidado_2022_2024.csv", sep=";")
 
-# ==== BLOCO DE DEBUG (RAIO-X) ====
-st.error("🚨 MODO DEBUG ATIVADO 🚨")
-st.write("Veja exatamente quais colunas o Streamlit encontrou no arquivo:")
-st.write(df.columns.tolist())
-st.write("Visualização das 5 primeiras linhas:")
-st.dataframe(df.head())
-st.stop() # 🛑 Para o aplicativo aqui e não deixa ele dar o KeyError lá embaixo
+# 1. Carregando a base com o separador correto (vírgula)
+df = pd.read_csv("PEDE_Consolidado_2022_2024.csv", sep=",")
 
-
-# 1. Lendo a base bruta forçando o separador ponto e vírgula
-# (Se o seu arquivo usar vírgula, basta trocar sep=";" por sep=",")
-df = pd.read_csv("PEDE_Consolidado_2022_2024.csv", sep=";")
-
-# 2. Garantir que todas as colunas fiquem minúsculas (evita erro de 'Ano' vs 'ano')
+# 2. Padronizar todas as colunas para minúsculo para facilitar a leitura
 df.columns = df.columns.str.lower()
 
-# 3. Se a coluna 'ian_cat' não estiver no CSV original, recriamos ela na hora!
+# 3. Ajustar os nomes das colunas para bater com o que os seus gráficos esperam
+if 'ano_pesquisa' in df.columns:
+    df.rename(columns={'ano_pesquisa': 'ano_referencia'}, inplace=True)
+
+# 4. Criar a categoria IAN (para o gráfico 1 de barras empilhadas)
 if 'ian_cat' not in df.columns and 'ian' in df.columns:
     df['ian_cat'] = df['ian'].apply(
         lambda v: 'Adequado' if v >= 9.0 else ('Defasagem Moderada' if v >= 5.0 else 'Defasagem Severa')
     )
 
-# 4. Base Tratada para o Simulador ML
-df_ml = pd.read_csv("base_modelagem.csv", sep=";") # Adicione o sep=";" aqui também por precaução
+# 5. Criar a coluna "pedra" genérica (vamos usar a Fase, já que seus gráficos pedem)
+if 'pedra' not in df.columns and 'fase' in df.columns:
+    df['pedra'] = df['fase']
 
-# 5. Carregamento do Modelo Otimizado
+# ==============================================================================
+# CARREGAMENTO DO MOTOR DE MACHINE LEARNING
+# ==============================================================================
+df_ml = pd.read_csv("base_modelagem.csv", sep=";") # Mantemos a leitura do modelo separada
 modelo = joblib.load("modelo_passos_magicos_otimizado.pkl")
 
 # ==============================================================================
