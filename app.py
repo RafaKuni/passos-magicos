@@ -7,6 +7,9 @@ import plotly.graph_objects as go
 import warnings
 import plotly.figure_factory as ff
 import re
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import roc_auc_score
 
 # ==============================================================================
 # CARREGAMENTO E TRATAMENTO DE DADOS PARA OS GRÁFICOS
