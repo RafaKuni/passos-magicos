@@ -524,19 +524,96 @@ with st.expander("7. Ponto de Virada (IPV) - Quais comportamentos - acadêmicos,
         # Opcional: Tabela de apoio resumida
         st.dataframe(corr_geral.set_index('Indicador').sort_values(by='Correlação', ascending=False).round(3), use_container_width=True)
 
-with st.expander("8. Multidimensionalidade dos indicadores"):
-        st.markdown("**Análise:** Quanto mais indicadores o aluno consegue manter acima da mediana, maior é a sua nota final, confirmando a visão holística do programa.")
-        pilares = ['ida', 'ieg', 'ips', 'ipp']
-        df_multi = df.copy()
-        for pilar in pilares:
-            df_multi[f'alto_{pilar}'] = (df_multi[pilar] >= df_multi[pilar].median()).astype(int)
-        df_multi['combinacao_pilares'] = df_multi[[f'alto_{pilar}' for pilar in pilares]].sum(axis=1)
+with st.expander("8. Multidimensionalidade dos indicadores - Quais combinações de indicadores (IDA + IEG + IPS + IPP) elevam mais a nota global do aluno (INDE)?"):
+        st.markdown("""
+        **Análise:** Aplicamos um modelo de Regressão Linear para decodificar o INDE, identificando matematicamente 
+        qual indicador isolado exerce maior tração (peso) sobre o índice global, complementado por um mapa de calor 
+        multidimensional dos pilares.
+        """)
 
-        fig8 = px.box(df_multi, x='combinacao_pilares', y='inde_ano', color='combinacao_pilares', color_discrete_sequence=px.colors.sequential.Blues, title="O Poder da Multidimensionalidade no INDE", category_orders={'combinacao_pilares': [0, 1, 2, 3, 4]})
-        df_tendencia = df_multi.groupby('combinacao_pilares')['inde_ano'].mean().reset_index()
-        fig8.add_trace(go.Scatter(x=df_tendencia['combinacao_pilares'], y=df_tendencia['inde_ano'], mode='lines+markers', name='Tendência da Média', line=dict(color='red', dash='dash', width=3), marker=dict(color='red', size=10)))
-        fig8.update_layout(xaxis_title="Número de Indicadores Acima da Mediana", yaxis_title="Nota Global (INDE)", showlegend=False)
-        st.plotly_chart(fig8, use_container_width=True)
+        # 1. Preparar e limpar os dados do modelo
+        cols_modelo = ['inde', 'ida', 'ieg', 'ips', 'ipp']
+        
+        # Garantir colunas limpas e sem duplicadas
+        df_q8 = df.copy()
+        df_q8.columns = [str(col).strip().lower() for col in df_q8.columns]
+        df_q8 = df_q8.loc[:, ~df_q8.columns.duplicated()].copy()
+
+        # Normalizar nomes de INDE caso venham com ano no nome bruto
+        if 'inde 2024' in df_q8.columns:
+            df_q8 = df_q8.rename(columns={'inde 2024': 'inde'})
+        elif 'inde 2023' in df_q8.columns:
+            df_q8 = df_q8.rename(columns={'inde 2023': 'inde'})
+
+        # Conversão de vírgula para ponto e tipos numéricos
+        for col in cols_modelo:
+            if col in df_q8.columns:
+                df_q8[col] = df_q8[col].astype(str).str.replace(',', '.')
+                df_q8[col] = pd.to_numeric(df_q8[col], errors='coerce')
+
+        # Remover nulos para a regressão
+        df_ml = df_q8.dropna(subset=[c for c in cols_modelo if c in df_q8.columns]).copy()
+
+        if len(df_ml) > 0 and all(c in df_ml.columns for c in ['ida', 'ieg', 'ipp', 'ips', 'inde']):
+            X = df_ml[['ida', 'ieg', 'ipp', 'ips']]
+            y = df_ml['inde']
+
+            modelo = LinearRegression()
+            modelo.fit(X, y)
+
+            # 2. Organizar os pesos do modelo
+            pesos = pd.DataFrame({
+                'Indicador': ['IDA', 'IEG', 'IPP', 'IPS'],
+                'Peso_Matematico': modelo.coef_
+            }).sort_values(by='Peso_Matematico', ascending=True) # Ascending para o gráfico horizontal do Plotly alinhar bem
+
+            # 3. Criar colunas no Streamlit para os dois gráficos
+            c1, c2 = st.columns(2)
+
+            with c1:
+                # Gráfico 1: Coeficientes da Regressão (Pesos)
+                fig_pesos = px.bar(
+                    pesos,
+                    x='Peso_Matematico',
+                    y='Indicador',
+                    orientation='h',
+                    text=pesos['Peso_Matematico'].apply(lambda x: f'{x:.3f}'),
+                    title='Qual indicador eleva mais o INDE?<br><sup>Pesos do Modelo (Coeficientes)</sup>',
+                    color='Indicador',
+                    color_discrete_sequence=['#2ca02c', '#3498db', '#9b59b6', '#e74c3c']
+                )
+                fig_pesos.update_layout(
+                    xaxis_title="Impacto no INDE (Coeficiente)",
+                    yaxis_title="Indicadores",
+                    showlegend=False
+                )
+                fig_pesos.update_traces(textposition='outside', textfont=dict(size=12, weight='bold'))
+                st.plotly_chart(fig_pesos, use_container_width=True)
+
+            with c2:
+                # Gráfico 2: Heatmap de Correlação Multidimensional
+                matriz_corr = df_ml[[c for c in cols_modelo if c in df_ml.columns]].corr()
+                
+                fig_heat = px.imshow(
+                    matriz_corr,
+                    text_auto='.2f',
+                    aspect="auto",
+                    color_continuous_scale='Blues',
+                    title='Mapa de Calor: A Multidimensionalidade'
+                )
+                fig_heat.update_layout(
+                    xaxis_title="",
+                    yaxis_title=""
+                )
+                st.plotly_chart(fig_heat, use_container_width=True)
+
+            # 4. Exibição dos insights textuais estruturados
+            st.markdown("---")
+            st.markdown("##### 📈 Interpretação Prática da Engenharia Reversa:")
+            for index, row in pesos.sort_values(by='Peso_Matematico', ascending=False).iterrows():
+                st.markdown(f"- Se o aluno aumentar **1 ponto** em **{row['Indicador']}**, o INDE global sobe em média **{row['Peso_Matematico']:.3f}** pontos.")
+        else:
+            st.warning("Não há dados suficientes ou colunas necessárias (`inde`, `ida`, `ieg`, `ipp`, `ips`) para rodar o modelo de Machine Learning neste conjunto.")
 
 with st.expander("9. Previsão de risco com ML"):
         st.markdown("**Análise:** O detalhamento do modelo de Inteligência Artificial, curva ROC e a Matriz de Confusão encontram-se na aba **Performance do Modelo**.")
