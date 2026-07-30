@@ -466,7 +466,7 @@ with st.expander("6. Aspectos psicopedagógicos (IPP) - As avaliações psicoped
         corr_ipp_ian = df_q6[['ipp', 'ian']].corr().iloc[0, 1]
         st.info(f"**A Prova Estatística:** A correlação exata entre o desenvolvimento psicopedagógico (IPP) e a adequação de nível (IAN) é de **{corr_ipp_ian:.3f}**.")
 
-with st.expander("7. Ponto de Virada (IPV)"):
+with st.expander("7. Ponto de Virada (IPV) - Quais comportamentos - acadêmicos, emocionais ou de engajamento - mais influenciam o IPV ao longo do tempo?"):
         st.markdown("""
         **Análise:** Avaliamos quais comportamentos (acadêmicos, emocionais ou de engajamento) mais influenciam 
         o Ponto de Virada (IPV) de forma consolidada ao longo dos anos (2022 - 2024).
