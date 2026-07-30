@@ -299,23 +299,49 @@ with st.expander("3. Engajamento nas atividades (IEG) - O grau de engajamento do
             fig_ieg_ipv.update_layout(xaxis_title="Engajamento (IEG)", yaxis_title="Ponto de Virada (IPV)")
             st.plotly_chart(fig_ieg_ipv, use_container_width=True)
 
-with st.expander("4. Autoavaliação (IAA)"):
-        st.markdown("""**Análise:** A análise da Autoavaliação (IAA) em relação aos dados reais traz um dos resultados mais curiosos: 
-        existe uma baixíssima coerência entre como o aluno se percebe e seus resultados práticos, indicando que a percepção subjetiva nem sempre reflete o desempenho.""")
-        df_iaa_data = df[['iaa', 'ida', 'ieg']].dropna()
-        corr_iaa_matrix = df_iaa_data.corr()
+with st.expander("4. Autoavaliação (IAA) - As percepções dos alunos sobre si mesmos (IAA) são coerentes com seu desempenho real (IDA) e engajamento (IEG)?"):
+        st.markdown("""
+        **Análise:** Comparamos a percepção do aluno sobre si mesmo (IAA) com seu desempenho real (IDA), 
+        engajamento (IEG) e aspecto psicossocial (IPS). O gráfico demonstra a força do alinhamento entre a 
+        autoavaliação e os demais pilares da jornada.
+        """)
         
-        c1, c2 = st.columns(2)
-        with c1:
-            r_iaa_ida = corr_iaa_matrix.loc["iaa", "ida"]
-            fig_iaa_ida = px.scatter(df_iaa_data, x='iaa', y='ida', trendline="ols", trendline_color_override="black", title=f"Autoavaliação vs Desempenho Real<br><sup>(r = {r_iaa_ida:.2f})</sup>", opacity=0.2)
-            fig_iaa_ida.update_traces(marker=dict(color='purple'))
-            st.plotly_chart(fig_iaa_ida, use_container_width=True)
-        with c2:
-            r_iaa_ieg = corr_iaa_matrix.loc["iaa", "ieg"]
-            fig_iaa_ieg = px.scatter(df_iaa_data, x='iaa', y='ieg', trendline="ols", trendline_color_override="black", title=f"Autoavaliação vs Engajamento Real<br><sup>(r = {r_iaa_ieg:.2f})</sup>", opacity=0.2)
-            fig_iaa_ieg.update_traces(marker=dict(color='orange'))
-            st.plotly_chart(fig_iaa_ieg, use_container_width=True)
+        # 1. Preparar os dados garantindo as colunas em minúsculo (padrão do app)
+        cols = ['iaa', 'ida', 'ieg', 'ips']
+        df_q4 = df[cols].copy()
+        
+        # Tratamento: trocar vírgula por ponto e garantir numérico
+        for col in cols:
+            df_q4[col] = df_q4[col].astype(str).str.replace(',', '.')
+            df_q4[col] = pd.to_numeric(df_q4[col], errors='coerce')
+            
+        # 2. Calcular matriz de correlação isolando o IAA
+        corr_iaa = df_q4.corr()[['iaa']].drop('iaa')
+        
+        # Reordenar igual ao seu Colab e preparar para o Plotly
+        corr_iaa = corr_iaa.reindex(['ida', 'ieg', 'ips']).reset_index()
+        corr_iaa.columns = ['Indicador', 'Correlação']
+        corr_iaa['Indicador'] = corr_iaa['Indicador'].str.upper() # Transforma 'ida' em 'IDA' para o gráfico
+        
+        # 3. Gráfico Plotly (Barra Horizontal)
+        fig4 = px.bar(
+            corr_iaa, 
+            x='Correlação', 
+            y='Indicador', 
+            orientation='h',
+            text=corr_iaa['Correlação'].apply(lambda x: f'{x:.3f}'),
+            title='Correlação da Autoavaliação (IAA) com outros indicadores',
+            color_discrete_sequence=['#B95246']
+        )
+        
+        fig4.update_layout(
+            xaxis_title="Valor da Correlação de Pearson", 
+            yaxis_title="",
+            xaxis=dict(range=[0, 0.35]) # Um pouco de respiro para o texto caber
+        )
+        fig4.update_traces(textposition='outside', textfont=dict(size=12, weight='bold'))
+        
+        st.plotly_chart(fig4, use_container_width=True)
 
 with st.expander("5. Aspectos psicossociais (IPS)"):
         st.markdown("""**Análise:** Esta análise utiliza um atraso temporal (Lag) para entender como o suporte psicossocial do ano anterior 
