@@ -10,6 +10,7 @@ import re
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import roc_auc_score
+from sklearn.preprocessing import StandardScaler
 
 # ==============================================================================
 # CARREGAMENTO E TRATAMENTO DE DADOS PARA OS GRÁFICOS
@@ -609,21 +610,8 @@ with st.expander("9. Previsão de Risco com Machine Learning (Regressão Logíst
         **Análise:** Construímos um modelo preditivo baseado em **Regressão Logística** para identificar a probabilidade 
         de um aluno entrar em risco de defasagem (`Defasagem < 0`) com base em seus pilares (IDA, IEG, IPS, IAA, IPP).
         """)
-
-    from sklearn.preprocessing import StandardScaler
                 
-                # Normalizar as features para que os coeficientes fiquem na mesma escala de importância
-                scaler = StandardScaler()
-                X_train_scaled = scaler.fit_transform(X_train)
-                X_test_scaled = scaler.transform(X_test)
-
-                modelo_lr = LogisticRegression(random_state=42, class_weight='balanced')
-                modelo_lr.fit(X_train_scaled, y_train)
-
-                y_pred = modelo_lr.predict(X_test_scaled)
-                y_proba = modelo_lr.predict_proba(X_test_scaled)[:, 1]
-
-        # 1. Preparar cópia e limpar colunas (tudo em minúsculo)
+# 1. Preparar cópia e limpar colunas (tudo em minúsculo)
         df_q9 = df.copy()
         df_q9.columns = [str(col).strip().lower() for col in df_q9.columns]
 
@@ -647,18 +635,23 @@ with st.expander("9. Previsão de Risco com Machine Learning (Regressão Logíst
                 # 2. Divisão treino e teste
                 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
 
-                # 3. Modelo de Regressão Logística com pesos balanceados
+                # 3. Normalização das features (StandardScaler)
+                scaler = StandardScaler()
+                X_train_scaled = scaler.fit_transform(X_train)
+                X_test_scaled = scaler.transform(X_test)
+
+                # 4. Modelo de Regressão Logística com pesos balanceados
                 modelo_lr = LogisticRegression(random_state=42, class_weight='balanced')
-                modelo_lr.fit(X_train, y_train)
+                modelo_lr.fit(X_train_scaled, y_train)
 
-                y_pred = modelo_lr.predict(X_test)
-                y_proba = modelo_lr.predict_proba(X_test)[:, 1]
+                y_pred = modelo_lr.predict(X_test_scaled)
+                y_proba = modelo_lr.predict_proba(X_test_scaled)[:, 1]
 
-                # 4. Organizar os coeficientes para visualização no Plotly
+                # 5. Organizar os coeficientes para visualização no Plotly
                 importancias = pd.DataFrame({
                     'Indicador': [c.upper() for c in X.columns],
                     'Coeficiente': modelo_lr.coef_[0]
-                }).sort_values(by='Coeficiente', ascending=True) # Ascending para barra horizontal do Plotly
+                }).sort_values(by='Coeficiente', ascending=True)
 
                 fig9 = px.bar(
                     importancias,
@@ -666,13 +659,13 @@ with st.expander("9. Previsão de Risco com Machine Learning (Regressão Logíst
                     y='Indicador',
                     orientation='h',
                     text=importancias['Coeficiente'].apply(lambda x: f'{x:.3f}'),
-                    title='Padrões de Risco: Impacto dos Indicadores na Probabilidade de Defasagem<br><sup>(Regressão Logística)</sup>',
+                    title='Padrões de Risco: Impacto dos Indicadores na Probabilidade de Defasagem<br><sup>(Regressão Logística Padronizada)</sup>',
                     color='Coeficiente',
-                    color_continuous_scale='RdBu_r' # Vermelho para fatores de risco, Azul para protetores
+                    color_continuous_scale='RdBu_r'
                 )
                 
                 fig9.update_layout(
-                    xaxis_title="Coeficiente do Modelo (Impacto no Risco)",
+                    xaxis_title="Coeficiente Padronizado (Impacto no Risco)",
                     yaxis_title="Indicadores",
                     coloraxis_showscale=False
                 )
@@ -680,11 +673,11 @@ with st.expander("9. Previsão de Risco com Machine Learning (Regressão Logíst
                 
                 st.plotly_chart(fig9, use_container_width=True)
 
-                # 5. Métricas de Performance do Modelo
+                # 6. Métricas de Performance do Modelo
                 auc_score = roc_auc_score(y_test, y_proba)
                 st.markdown(f"🎯 **Performance do Modelo (AUC-ROC Score):** `{auc_score:.4f}`")
 
-                # 6. Tabela de Alunos em Maior Risco
+                # 7. Tabela de Alunos em Maior Risco
                 df_resultados = X_test.copy()
                 df_resultados['Probabilidade_Risco'] = y_proba
                 df_resultados['Status_Risco_Real'] = y_test
@@ -697,9 +690,9 @@ with st.expander("9. Previsão de Risco com Machine Learning (Regressão Logíst
                     use_container_width=True
                 )
             else:
-                st.warning("O conjunto de dados filtrado não possui variação suficiente na variável alvo (ex: apenas uma classe presente) para treinar o modelo de Regressão Logística.")
+                st.warning("O conjunto de dados filtrado não possui variação suficiente na variável alvo para treinar o modelo.")
         else:
-            st.warning("As colunas necessárias para o modelo preditivo (`IDA`, `IEG`, `IPS`, `IAA`, `IPP`, `Defasagem`) não foram encontradas.")
+            st.warning("As colunas necessárias para o modelo preditivo não foram encontradas.")
 
 with st.expander("10. Efetividade do programa"):
         st.markdown("**Análise:** A efetividade do programa é medida pela evolução conjunta dos indicadores à medida que o aluno progride entre as fases (Pedras).")
