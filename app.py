@@ -391,16 +391,81 @@ with st.expander("5. Aspectos psicossociais (IPS) - Há padrões psicossociais (
             st.plotly_chart(fig_ips_ieg, use_container_width=True)
 
 with st.expander("6. Aspectos psicopedagógicos (IPP)"):
-        st.markdown("""**Análise:** Esta análise de convergência busca entender se a avaliação psicopedagógica (IPP) reflete a 
-        realidade da defasagem escolar (IAN).""")
-        df_q6 = df.copy()
-        df_q6['status_ian'] = df_q6['ian'].apply(lambda v: 'Adequado' if v >= 9.0 else ('Defasagem Moderada' if v >= 5.0 else 'Defasagem Severa'))
-        cores_q6 = {'Adequado': '#2ecc71', 'Defasagem Moderada': '#f1c40f', 'Defasagem Severa': '#e74c3c'}
+        with st.expander("6. Aspectos psicopedagógicos (IPP)"):
+        st.markdown("""
+        **Análise:** As avaliações psicopedagógicas (IPP) são comparadas com os níveis de defasagem dos alunos 
+        para entender se a avaliação profissional de desenvolvimento corrobora com o atraso acadêmico medido.
+        """)
+
+        # 1. Limpeza rápida e padronização (tudo minúsculo para o df)
+        cols_analise = ['ipp', 'ian', 'defasagem']
+        df_q6 = df[cols_analise].copy()
         
-        fig6 = px.box(df_q6, x='status_ian', y='ipp', color='status_ian', category_orders={'status_ian': ['Adequado', 'Defasagem Moderada', 'Defasagem Severa']}, color_discrete_map=cores_q6, points="outliers", title="Convergência: IPP vs. Status IAN")
-        fig6.add_hline(y=df_q6['ipp'].mean(), line_dash="dash", line_color="gray", annotation_text=f"Média Geral IPP: {df_q6['ipp'].mean():.2f}", annotation_position="top right")
-        fig6.update_layout(xaxis_title="Status de Defasagem (IAN)", yaxis_title="Avaliação Psicopedagógica (IPP)", showlegend=False)
-        st.plotly_chart(fig6, use_container_width=True)
+        for col in cols_analise:
+            df_q6[col] = df_q6[col].astype(str).str.replace(',', '.')
+            df_q6[col] = pd.to_numeric(df_q6[col], errors='coerce')
+
+        df_q6 = df_q6.dropna(subset=['ipp', 'defasagem'])
+
+        # 2. Reutilizar a classificação para deixar o gráfico mais legível e bonito
+        def classificar_defasagem_q6(d):
+            if pd.isna(d): return None
+            elif d >= 0: return '1. Em Fase'
+            elif d == -1: return '2. Defasagem Leve'
+            elif d == -2: return '3. Defasagem Moderada'
+            else: return '4. Defasagem Severa'
+
+        df_q6['cat_defasagem'] = df_q6['defasagem'].apply(classificar_defasagem_q6)
+        
+        ordem_niveis = ['1. Em Fase', '2. Defasagem Leve', '3. Defasagem Moderada', '4. Defasagem Severa']
+        
+        # Cores padronizadas para manter a consistência com a Pergunta 1
+        mapa_cores = {
+            '1. Em Fase': '#2ca02c', 
+            '2. Defasagem Leve': '#f1c40f', 
+            '3. Defasagem Moderada': '#ff7f0e',
+            '4. Defasagem Severa': '#d62728'
+        }
+
+        # 3. Criar as colunas para o Streamlit
+        c1, c2 = st.columns(2)
+
+        with c1:
+            # Boxplot - A distribuição real
+            fig_box = px.box(
+                df_q6, 
+                x='cat_defasagem', 
+                y='ipp', 
+                color='cat_defasagem',
+                category_orders={'cat_defasagem': ordem_niveis},
+                color_discrete_map=mapa_cores,
+                title="Distribuição do IPP por Nível de Defasagem"
+            )
+            fig_box.update_layout(xaxis_title="", yaxis_title="Nota Psicopedagógica (IPP)", showlegend=False)
+            st.plotly_chart(fig_box, use_container_width=True)
+
+        with c2:
+            # Gráfico de Barras - A média (Visão Executiva)
+            media_ipp = df_q6.groupby('cat_defasagem')['ipp'].mean().reset_index()
+            fig_bar = px.bar(
+                media_ipp, 
+                x='cat_defasagem', 
+                y='ipp',
+                color='cat_defasagem',
+                text=media_ipp['ipp'].apply(lambda x: f'{x:.1f}'),
+                category_orders={'cat_defasagem': ordem_niveis},
+                color_discrete_map=mapa_cores,
+                title="Média do IPP por Nível de Defasagem"
+            )
+            fig_bar.update_layout(xaxis_title="", yaxis_title="Média do IPP", showlegend=False)
+            fig_bar.update_traces(textposition='outside', textfont=dict(size=12, weight='bold'))
+            # Garantir que o eixo Y vá até um pouco mais que a nota máxima para caber o texto
+            fig_bar.update_yaxes(range=[0, df_q6['ipp'].max() * 1.15]) 
+            st.plotly_chart(fig_bar, use_container_width=True)
+
+        # 4. O "Print" da correlação formatado bonitão no Streamlit
+        corr_ipp_ian = df_q6[['ipp', 'ian']].corr().iloc[0, 1]
+        st.info(f"**A Prova Estatística:** A correlação exata entre o desenvolvimento psicopedagógico (IPP) e a adequação de nível (IAN) é de **{corr_ipp_ian:.3f}**.")
 
 with st.expander("7. Ponto de virada (IPV)"):
         st.markdown("**Análise:** O engajamento e o desempenho acadêmico são os principais motores para que o aluno atinja o 'Ponto de Virada'.")
