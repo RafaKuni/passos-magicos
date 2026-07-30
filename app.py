@@ -9,6 +9,17 @@ import warnings
 # ==============================================================================
 # CARREGAMENTO DE DADOS
 # ==============================================================================
+# 1. Carregando a base
+df = pd.read_csv("PEDE_Consolidado_2022_2024.csv", sep=";")
+
+# ==== BLOCO DE DEBUG (RAIO-X) ====
+st.error("🚨 MODO DEBUG ATIVADO 🚨")
+st.write("Veja exatamente quais colunas o Streamlit encontrou no arquivo:")
+st.write(df.columns.tolist())
+st.write("Visualização das 5 primeiras linhas:")
+st.dataframe(df.head())
+st.stop() # 🛑 Para o aplicativo aqui e não deixa ele dar o KeyError lá embaixo
+
 
 # 1. Lendo a base bruta forçando o separador ponto e vírgula
 # (Se o seu arquivo usar vírgula, basta trocar sep=";" por sep=",")
