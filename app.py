@@ -343,22 +343,52 @@ with st.expander("4. Autoavaliação (IAA) - As percepções dos alunos sobre si
         
         st.plotly_chart(fig4, use_container_width=True)
 
-with st.expander("5. Aspectos psicossociais (IPS)"):
-        st.markdown("""**Análise:** Esta análise utiliza um atraso temporal (Lag) para entender como o suporte psicossocial do ano anterior 
-        influencia o desempenho. Os dados indicam que o bem-estar emocional é um preditor relevante para o sucesso acadêmico futuro.""")
-        df_lag = df.sort_values(['ra', 'ano_referencia'])
-        df_lag['ips_anterior'] = df_lag.groupby('ra')['ips'].shift(1)
-        df_limpo = df_lag.dropna(subset=['ips_anterior', 'ida']).copy()
-
+with st.expander("5. Aspectos psicossociais (IPS) - Há padrões psicossociais (IPS) que antecedem quedas de desempenho acadêmico ou de engajamento?"):
+        st.markdown("""
+        **Análise:** Investigamos se há padrões psicossociais (IPS) que antecedem quedas de desempenho acadêmico (IDA) 
+        ou de engajamento (IEG). A análise visual da dispersão e as linhas de tendência evidenciam uma relação 
+        praticamente independente entre esses pilares.
+        """)
+        
+        # 1. Preparar os dados garantindo as colunas em minúsculo e tratando as vírgulas
+        cols = ['ips', 'ida', 'ieg']
+        df_q5 = df[cols].copy()
+        
+        for col in cols:
+            df_q5[col] = df_q5[col].astype(str).str.replace(',', '.')
+            df_q5[col] = pd.to_numeric(df_q5[col], errors='coerce')
+            
+        # Remover nulos para o OLS não falhar
+        df_q5 = df_q5.dropna()
+        
+        # 2. Criar Colunas no Streamlit para os dois gráficos
         c1, c2 = st.columns(2)
+
         with c1:
-            fig_ips_pedra = px.box(df_limpo, x='pedra', y='ips_anterior', category_orders={'pedra': ['Quartzo', 'Agata', 'Ametista', 'Topazio']}, title="Impacto do IPS Passado na Pedra Atual", color='pedra', color_discrete_sequence=px.colors.sequential.Magma)
-            st.plotly_chart(fig_ips_pedra, use_container_width=True)
-        with c2:
-            r_ips_ida = df_limpo['ips_anterior'].corr(df_limpo['ida'])
-            fig_ips_ida = px.scatter(df_limpo, x='ips_anterior', y='ida', trendline="ols", trendline_color_override="red", title=f"IPS Anterior vs IDA Atual<br><sup>(Correlação r = {r_ips_ida:.2f})</sup>", opacity=0.3)
-            fig_ips_ida.update_traces(marker=dict(color='teal'))
+            # Gráfico 1: IPS vs IDA
+            fig_ips_ida = px.scatter(
+                df_q5, x='ips', y='ida', 
+                trendline="ols",
+                trendline_color_override="#2c3e50",
+                title='A "Falsa" Relação:<br>Psicossocial (IPS) vs Desempenho (IDA)',
+                opacity=0.4,
+                color_discrete_sequence=['#e74c3c']
+            )
+            fig_ips_ida.update_layout(xaxis_title="Indicador Psicossocial (IPS)", yaxis_title="Desempenho Acadêmico (IDA)")
             st.plotly_chart(fig_ips_ida, use_container_width=True)
+
+        with c2:
+            # Gráfico 2: IPS vs IEG
+            fig_ips_ieg = px.scatter(
+                df_q5, x='ips', y='ieg', 
+                trendline="ols",
+                trendline_color_override="#2c3e50",
+                title='A "Falsa" Relação:<br>Psicossocial (IPS) vs Engajamento (IEG)',
+                opacity=0.4,
+                color_discrete_sequence=['#3498db']
+            )
+            fig_ips_ieg.update_layout(xaxis_title="Indicador Psicossocial (IPS)", yaxis_title="Engajamento nas Atividades (IEG)")
+            st.plotly_chart(fig_ips_ieg, use_container_width=True)
 
 with st.expander("6. Aspectos psicopedagógicos (IPP)"):
         st.markdown("""**Análise:** Esta análise de convergência busca entender se a avaliação psicopedagógica (IPP) reflete a 
