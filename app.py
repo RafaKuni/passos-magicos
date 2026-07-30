@@ -11,8 +11,7 @@ import warnings
 # ==============================================================================
 
 # 1. Base Bruta para as Abas 1 e 2 (Business Intelligence / Gráficos)
-# Substitua "final.xlsx" pelo nome real do seu arquivo original do Excel/CSV
-df = pd.read_excel("final.xlsx") 
+df = pd.read_csv("PEDE_Consolidado_2022_2024.csv")
 
 # 2. Base Tratada para as Abas 3 e 4 (Machine Learning / Simulador)
 df_ml = pd.read_csv("base_modelagem.csv")
