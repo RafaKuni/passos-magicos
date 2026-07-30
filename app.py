@@ -5,6 +5,7 @@ import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
 import warnings
+import plotly.figure_factory as ff
 
 # ==============================================================================
 # CARREGAMENTO E TRATAMENTO DE DADOS PARA OS GRÁFICOS
