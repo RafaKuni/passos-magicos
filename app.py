@@ -601,8 +601,89 @@ with st.expander("8. Multidimensionalidade dos indicadores - Quais combinações
         else:
             st.warning("A coluna correspondente ao INDE não foi identificada automaticamente no conjunto de dados para gerar este gráfico.")
 
-with st.expander("9. Previsão de risco com ML"):
-        st.markdown("**Análise:** O detalhamento do modelo de Inteligência Artificial, curva ROC e a Matriz de Confusão encontram-se na aba **Performance do Modelo**.")
+with st.expander("9. Previsão de Risco com Machine Learning (Regressão Logística) - Quais padrões nos indicadores permitem identificar alunos em risco antes de queda no desempenho ou aumento da defasagem?"):
+        st.markdown("""
+        **Análise:** Construímos um modelo preditivo baseado em **Regressão Logística** para identificar a probabilidade 
+        de um aluno entrar em risco de defasagem (`Defasagem < 0`) com base em seus pilares (IDA, IEG, IPS, IAA, IPP).
+        """)
+
+        # 1. Preparar cópia e limpar colunas (tudo em minúsculo)
+        df_q9 = df.copy()
+        df_q9.columns = [str(col).strip().lower() for col in df_q9.columns]
+
+        cols_features = ['ida', 'ieg', 'ips', 'iaa', 'ipp']
+        cols_necessarias = cols_features + ['defasagem']
+
+        # Tratamento de dados (vírgula para ponto e conversão numérica)
+        for col in cols_necessarias:
+            if col in df_q9.columns:
+                df_q9[col] = df_q9[col].astype(str).str.replace(',', '.')
+                df_q9[col] = pd.to_numeric(df_q9[col], errors='coerce')
+
+        if all(c in df_q9.columns for c in cols_necessarias):
+            df_ml = df_q9.dropna(subset=cols_necessarias).copy()
+            df_ml['alvo_risco'] = (df_ml['defasagem'] < 0).astype(int)
+
+            X = df_ml[cols_features]
+            y = df_ml['alvo_risco']
+
+            if len(df_ml) > 10 and y.nunique() > 1:
+                # 2. Divisão treino e teste
+                X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+
+                # 3. Modelo de Regressão Logística com pesos balanceados
+                modelo_lr = LogisticRegression(random_state=42, class_weight='balanced')
+                modelo_lr.fit(X_train, y_train)
+
+                y_pred = modelo_lr.predict(X_test)
+                y_proba = modelo_lr.predict_proba(X_test)[:, 1]
+
+                # 4. Organizar os coeficientes para visualização no Plotly
+                importancias = pd.DataFrame({
+                    'Indicador': [c.upper() for c in X.columns],
+                    'Coeficiente': modelo_lr.coef_[0]
+                }).sort_values(by='Coeficiente', ascending=True) # Ascending para barra horizontal do Plotly
+
+                fig9 = px.bar(
+                    importancias,
+                    x='Coeficiente',
+                    y='Indicador',
+                    orientation='h',
+                    text=importancias['Coeficiente'].apply(lambda x: f'{x:.3f}'),
+                    title='Padrões de Risco: Impacto dos Indicadores na Probabilidade de Defasagem<br><sup>(Regressão Logística)</sup>',
+                    color='Coeficiente',
+                    color_continuous_scale='RdBu_r' # Vermelho para fatores de risco, Azul para protetores
+                )
+                
+                fig9.update_layout(
+                    xaxis_title="Coeficiente do Modelo (Impacto no Risco)",
+                    yaxis_title="Indicadores",
+                    coloraxis_showscale=False
+                )
+                fig9.update_traces(textposition='outside', textfont=dict(size=12, weight='bold'))
+                
+                st.plotly_chart(fig9, use_container_width=True)
+
+                # 5. Métricas de Performance do Modelo
+                auc_score = roc_auc_score(y_test, y_proba)
+                st.markdown(f"🎯 **Performance do Modelo (AUC-ROC Score):** `{auc_score:.4f}`")
+
+                # 6. Tabela de Alunos em Maior Risco
+                df_resultados = X_test.copy()
+                df_resultados['Probabilidade_Risco'] = y_proba
+                df_resultados['Status_Risco_Real'] = y_test
+                
+                st.markdown("##### 🚨 Top Alunos com Maior Probabilidade de Risco no Teste")
+                st.dataframe(
+                    df_resultados.sort_values(by='Probabilidade_Risco', ascending=False).head(10).style.format({
+                        'Probabilidade_Risco': '{:.2%}'
+                    }), 
+                    use_container_width=True
+                )
+            else:
+                st.warning("O conjunto de dados filtrado não possui variação suficiente na variável alvo (ex: apenas uma classe presente) para treinar o modelo de Regressão Logística.")
+        else:
+            st.warning("As colunas necessárias para o modelo preditivo (`IDA`, `IEG`, `IPS`, `IAA`, `IPP`, `Defasagem`) não foram encontradas.")
 
 with st.expander("10. Efetividade do programa"):
         st.markdown("**Análise:** A efetividade do programa é medida pela evolução conjunta dos indicadores à medida que o aluno progride entre as fases (Pedras).")
