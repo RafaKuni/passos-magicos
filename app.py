@@ -116,31 +116,147 @@ with aba1:
 # ==============================================================================
 with aba2:
     st.header("🔍 Resumo das Respostas às Questões Estratégicas")
-    st.info("Aqui você pode manter a lógica exata dos gráficos do template original apontando para a base crua (final.xlsx).")
-    
-    # Mantive os expanders fiéis ao seu template para você preencher com os gráficos desejados
+
     with st.expander("1. Adequação do nível (IAN)"):
-        st.write("Gráficos de distribuição do IAN...")
+        st.markdown("**Análise:** O perfil de defasagem dos alunos, medido pelo IAN, demonstra uma trajetória de recuperação acadêmica consistente.")
+        df_q1 = df.copy()
+        # Recriando a categoria baseada na nota IAN
+        df_q1['Categoria_IAN'] = df_q1['IAN'].apply(lambda v: 'Adequado' if v >= 9.0 else ('Defasagem Moderada' if v >= 5.0 else 'Defasagem Severa'))
+        
+        ian_counts = df_q1.groupby(['Ano', 'Categoria_IAN']).size().unstack(fill_value=0)
+        ian_pct = ian_counts.div(ian_counts.sum(axis=1), axis=0) * 100
+        df_ian_plot = ian_pct.reset_index().melt(id_vars='Ano', var_name='Categoria_IAN', value_name='percentual')
+
+        fig1 = px.bar(df_ian_plot, x='Ano', y='percentual', color='Categoria_IAN', 
+                      text=df_ian_plot['percentual'].apply(lambda x: f'{x:.1f}%' if x > 2 else ''),
+                      color_discrete_sequence=px.colors.sequential.Viridis,
+                      title="Distribuição Percentual da Adequação de Nível (IAN) por Ano")
+        fig1.update_layout(barmode='stack', xaxis=dict(dtick=1))
+        fig1.update_traces(textposition='inside', textfont=dict(color='white', size=12))
+        st.plotly_chart(fig1, use_container_width=True)
+
     with st.expander("2. Desempenho acadêmico (IDA)"):
-        st.write("Gráficos de evolução do IDA...")
+        st.markdown("**Análise:** A análise do IDA revela um cenário de amadurecimento institucional e eficácia metodológica.")
+        fig2 = px.line(df.groupby(['Ano', 'Fase'])['IDA'].mean().reset_index(), 
+                       x='Ano', y='IDA', color='Fase', markers=True, 
+                       title="Evolução do IDA Médio por Fase")
+        fig2.update_layout(xaxis=dict(dtick=1))
+        st.plotly_chart(fig2, use_container_width=True)
+
     with st.expander("3. Engajamento (IEG)"):
-        st.write("Correlação IEG vs IDA e IPV...")
+        st.markdown("**Análise:** Correlação direta e positiva entre Engajamento, Desempenho e Ponto de Virada.")
+        df_corr3 = df[['IEG', 'IDA', 'IPV']].dropna()
+        c1, c2 = st.columns(2)
+        with c1:
+            fig3a = px.scatter(df_corr3, x='IEG', y='IDA', trendline="ols", trendline_color_override="red", title="Engajamento vs Acadêmico", opacity=0.3)
+            fig3a.update_traces(marker=dict(color='teal'))
+            st.plotly_chart(fig3a, use_container_width=True)
+        with c2:
+            fig3b = px.scatter(df_corr3, x='IEG', y='IPV', trendline="ols", trendline_color_override="blue", title="Engajamento vs Ponto de Virada", opacity=0.3)
+            fig3b.update_traces(marker=dict(color='coral'))
+            st.plotly_chart(fig3b, use_container_width=True)
+
     with st.expander("4. Autoavaliação (IAA)"):
-        st.write("Correlação IAA vs Resultados Reais...")
+        st.markdown("**Análise:** A percepção subjetiva do aluno (IAA) nem sempre reflete o desempenho real, indicando baixa coerência.")
+        df_corr4 = df[['IAA', 'IDA', 'IEG']].dropna()
+        c1, c2 = st.columns(2)
+        with c1:
+            fig4a = px.scatter(df_corr4, x='IAA', y='IDA', trendline="ols", trendline_color_override="black", title="Autoavaliação vs Desempenho Real", opacity=0.2)
+            fig4a.update_traces(marker=dict(color='purple'))
+            st.plotly_chart(fig4a, use_container_width=True)
+        with c2:
+            fig4b = px.scatter(df_corr4, x='IAA', y='IEG', trendline="ols", trendline_color_override="black", title="Autoavaliação vs Engajamento Real", opacity=0.2)
+            fig4b.update_traces(marker=dict(color='orange'))
+            st.plotly_chart(fig4b, use_container_width=True)
+
     with st.expander("5. Aspectos psicossociais (IPS)"):
-        st.write("Impacto do Lag do IPS no IDA...")
+        st.markdown("**Análise:** Distribuição do suporte psicossocial (IPS) ao longo das Fases do programa.")
+        fig5 = px.box(df, x='Fase', y='IPS', color='Fase', 
+                      color_discrete_sequence=px.colors.sequential.Magma,
+                      title="Evolução e Dispersão do Bem-Estar Emocional (IPS) por Fase")
+        st.plotly_chart(fig5, use_container_width=True)
+
     with st.expander("6. Aspectos psicopedagógicos (IPP)"):
-        st.write("Convergência IPP vs IAN...")
+        st.markdown("**Análise:** A avaliação psicopedagógica (IPP) reflete a realidade da defasagem escolar (IAN).")
+        df_q6 = df_q1.copy() # Reaproveitando o Categoria_IAN da Q1
+        cores_q6 = {'Adequado': '#2ecc71', 'Defasagem Moderada': '#f1c40f', 'Defasagem Severa': '#e74c3c'}
+        
+        fig6 = px.box(df_q6, x='Categoria_IAN', y='IPP', color='Categoria_IAN', 
+                      category_orders={'Categoria_IAN': ['Adequado', 'Defasagem Moderada', 'Defasagem Severa']},
+                      color_discrete_map=cores_q6, points="outliers",
+                      title="Convergência: IPP (Psicopedagógico) vs. Status IAN (Defasagem)")
+        fig6.add_hline(y=df_q6['IPP'].mean(), line_dash="dash", line_color="gray", annotation_text=f"Média Geral IPP", annotation_position="top right")
+        fig6.update_layout(showlegend=False)
+        st.plotly_chart(fig6, use_container_width=True)
+
     with st.expander("7. Ponto de virada (IPV)"):
-        st.write("Influência das métricas no Ponto de Virada...")
+        st.markdown("**Análise:** O engajamento e o desempenho acadêmico são os principais motores para o Ponto de Virada.")
+        colunas_analise = ['IPV', 'IDA', 'IEG', 'IPS', 'IPP']
+        corr_matrix = df[colunas_analise].dropna().corr()
+        df_imp = corr_matrix['IPV'].sort_values(ascending=False).drop('IPV').reset_index()
+        df_imp.columns = ['Indicador', 'Correlacao']
+
+        c1, c2 = st.columns(2)
+        with c1:
+            fig7a = px.bar(df_imp, x='Correlacao', y='Indicador', orientation='h', color='Correlacao', 
+                           color_continuous_scale='Viridis', text=df_imp['Correlacao'].apply(lambda x: f'{x:.2f}'),
+                           title="Influência dos Comportamentos no IPV")
+            fig7a.update_layout(xaxis_range=[0, 1], showlegend=False, coloraxis_showscale=False)
+            fig7a.update_traces(textposition='outside', textfont=dict(weight='bold'))
+            st.plotly_chart(fig7a, use_container_width=True)
+        with c2:
+            fig7b = px.scatter(df, x='IEG', y='IPV', trendline="ols", trendline_color_override="darkviolet", opacity=0.3, title="Tendência: Engajamento vs Ponto de Virada")
+            fig7b.update_traces(marker=dict(color='purple'))
+            st.plotly_chart(fig7b, use_container_width=True)
+
     with st.expander("8. Multidimensionalidade dos indicadores"):
-        st.write("Boxplot da combinação de pilares...")
+        st.markdown("**Análise:** Quanto mais indicadores o aluno consegue manter acima da mediana, maior é a sua nota final (INDE).")
+        pilares = ['IDA', 'IEG', 'IPS', 'IPP']
+        df_multi = df.copy()
+        for pilar in pilares:
+            df_multi[f'alto_{pilar}'] = (df_multi[pilar] >= df_multi[pilar].median()).astype(int)
+        df_multi['combinacao_pilares'] = df_multi[[f'alto_{pilar}' for pilar in pilares]].sum(axis=1)
+
+        fig8 = px.box(df_multi, x='combinacao_pilares', y='INDE', color='combinacao_pilares', 
+                      color_discrete_sequence=px.colors.sequential.Blues, 
+                      title="O Poder da Multidimensionalidade no INDE",
+                      category_orders={'combinacao_pilares': [0, 1, 2, 3, 4]})
+        
+        df_tendencia = df_multi.groupby('combinacao_pilares')['INDE'].mean().reset_index()
+        fig8.add_trace(go.Scatter(x=df_tendencia['combinacao_pilares'], y=df_tendencia['INDE'], mode='lines+markers', name='Tendência da Média', line=dict(color='red', dash='dash', width=3), marker=dict(color='red', size=10)))
+        fig8.update_layout(showlegend=False, xaxis_title="Pilares Acima da Mediana")
+        st.plotly_chart(fig8, use_container_width=True)
+
     with st.expander("9. Previsão de risco com ML"):
-        st.write("Distribuição das probabilidades do modelo logístico...")
+        st.markdown("**Análise:** Toda a modelagem de Machine Learning preditivo (Regressão Logística Otimizada) está detalhada, com análise de falsos positivos e métricas globais, nas abas **Performance do Modelo** e **Simulador**.")
+
     with st.expander("10. Efetividade do programa"):
-        st.write("Evolução dos indicadores por Fase (Pedra)...")
+        st.markdown("**Análise:** Evolução conjunta dos indicadores à medida que o aluno progride nas Fases.")
+        ind_foco = ['INDE', 'IDA', 'IEG', 'IPV', 'IPP']
+        df_medias = df.groupby('Fase')[ind_foco].mean().reset_index()
+
+        fig10 = go.Figure()
+        for col in ind_foco:
+            fig10.add_trace(go.Scatter(x=df_medias['Fase'], y=df_medias[col], mode='lines+markers', name=col.upper(), line=dict(width=3), marker=dict(size=8)))
+        fig10.update_layout(title="Efetividade: Evolução dos Indicadores por Fase", xaxis_title="Fases", yaxis_title="Média dos Indicadores", yaxis=dict(range=[0, 10.5]), hovermode="x unified")
+        st.plotly_chart(fig10, use_container_width=True)
+
     with st.expander("11. Insights e criatividade"):
-        st.write("Matriz de Desempenho vs Engajamento...")
+        st.markdown("**Análise:** Matriz estratégica cruzando o Engajamento (IEG) com o Desempenho (IDA) para classificar os alunos em quadrantes comportamentais.")
+        mediana_ida = df['IDA'].median()
+        mediana_ieg = df['IEG'].median()
+
+        fig11 = px.scatter(df, x='IEG', y='IDA', color='Fase', hover_data=['Ano'], opacity=0.6, title="Matriz de Desempenho vs. Engajamento")
+        fig11.add_hline(y=mediana_ida, line_dash="dash", line_color="black", opacity=0.5)
+        fig11.add_vline(x=mediana_ieg, line_dash="dash", line_color="black", opacity=0.5)
+        
+        fig11.add_annotation(x=9, y=9, text="PROTAGONISTAS", showarrow=False, font=dict(color="green", size=12, weight="bold"))
+        fig11.add_annotation(x=1, y=9, text="TALENTOS DESMOTIVADOS", showarrow=False, font=dict(color="orange", size=12, weight="bold"))
+        fig11.add_annotation(x=9, y=1, text="RISCO DE FRUSTRAÇÃO", showarrow=False, font=dict(color="red", size=12, weight="bold"))
+        fig11.add_annotation(x=1, y=1, text="ZONA DE ALERTA", showarrow=False, font=dict(color="darkred", size=12, weight="bold"))
+        
+        fig11.update_layout(xaxis=dict(range=[0, 10.5]), yaxis=dict(range=[0, 10.5]))
+        st.plotly_chart(fig11, use_container_width=True)
 
 # ==============================================================================
 # ABA 3: PERFORMANCE DO MODELO (Atualizado com os nossos números reais)
