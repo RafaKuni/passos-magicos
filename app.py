@@ -154,41 +154,38 @@ with st.expander("1. Adequação do nível (IAN)"):
         df_q1['ian'] = df_q1['ian'].astype(str).str.replace(',', '.')
         df_q1['ian'] = pd.to_numeric(df_q1['ian'], errors='coerce')
         
-        # 1. Regra de negócio
+        # 1. Regra de negócio (COLOQUE OS VALORES OFICIAIS AQUI)
         def classificar_ian(v):
             if pd.isna(v): return None
-            if v >= 7.5: return 'Em fase'
-            elif v >= 5.0: return 'Defasagem leve'
-            elif v >= 2.5: return 'Defasagem moderada'
-            else: return 'Defasagem severa'
+            if v >= 7.5: return '1. Em Fase'
+            elif v >= 6.0: return '2. Defasagem Leve'      # <- Troque 6.0 pelo corte correto
+            elif v >= 5.0: return '3. Defasagem Moderada'  # <- Troque 5.0 pelo corte correto
+            else: return '4. Defasagem Severa'
             
         df_q1['ian_cat'] = df_q1['ian'].apply(classificar_ian)
         
-        ordem_niveis = ['Em fase', 'Defasagem leve', 'Defasagem moderada', 'Defasagem severa']
+        # Nomes exatos conforme a sua imagem image_1e8753.png
+        ordem_niveis = ['1. Em Fase', '2. Defasagem Leve', '3. Defasagem Moderada', '4. Defasagem Severa']
         
-        # 2. Agrupamento inicial
         df_ian_bruto = df_q1.groupby(['ano_referencia', 'ian_cat']).size().reset_index(name='quantidade')
         
-        # 3. TRUQUE: Cria todas as combinações possíveis para forçar os "zeros" a aparecerem
+        # Cria todas as combinações para forçar as 4 categorias na legenda sempre
         anos = df_ian_bruto['ano_referencia'].unique()
         todas_combinacoes = pd.MultiIndex.from_product([anos, ordem_niveis], names=['ano_referencia', 'ian_cat']).to_frame(index=False)
         df_ian = pd.merge(todas_combinacoes, df_ian_bruto, on=['ano_referencia', 'ian_cat'], how='left').fillna({'quantidade': 0})
         
-        # 4. Mapa de cores fixo
         mapa_cores = {
-            'Em fase': '#2ecc71', 
-            'Defasagem leve': '#f1c40f', 
-            'Defasagem moderada': '#e67e22', 
-            'Defasagem severa': '#e74c3c'
+            '1. Em Fase': '#2ecc71', 
+            '2. Defasagem Leve': '#f1c40f', 
+            '3. Defasagem Moderada': '#ff7f0e', # Laranja ajustado
+            '4. Defasagem Severa': '#d62728'    # Vermelho ajustado
         }
 
-        # Gráfico
         fig1 = px.bar(
             df_ian, 
             x='ano_referencia', 
             y='quantidade', 
             color='ian_cat', 
-            # Mostra o número só se for maior que zero para não sujar o gráfico
             text=df_ian['quantidade'].apply(lambda x: int(x) if x > 0 else ""), 
             barmode='stack',
             title="Quantidade de Alunos por Nível de Defasagem (IAN)",
