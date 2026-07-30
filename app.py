@@ -466,22 +466,63 @@ with st.expander("6. Aspectos psicopedagógicos (IPP) - As avaliações psicoped
         corr_ipp_ian = df_q6[['ipp', 'ian']].corr().iloc[0, 1]
         st.info(f"**A Prova Estatística:** A correlação exata entre o desenvolvimento psicopedagógico (IPP) e a adequação de nível (IAN) é de **{corr_ipp_ian:.3f}**.")
 
-with st.expander("7. Ponto de virada (IPV)"):
-        st.markdown("**Análise:** O engajamento e o desempenho acadêmico são os principais motores para que o aluno atinja o 'Ponto de Virada'.")
-        df_corr_data = df[['ipv', 'ida', 'ieg', 'ips', 'ipp']].dropna()
-        df_importancia = df_corr_data.corr()['ipv'].sort_values(ascending=False).drop('ipv').reset_index()
-        df_importancia.columns = ['Indicador', 'Correlacao']
+with st.expander("7. Ponto de Virada (IPV)"):
+        st.markdown("""
+        **Análise:** Avaliamos quais comportamentos (acadêmicos, emocionais ou de engajamento) mais influenciam 
+        o Ponto de Virada (IPV) de forma consolidada ao longo dos anos (2022 - 2024).
+        """)
 
-        c1, c2 = st.columns(2)
-        with c1:
-            fig_bar = px.bar(df_importancia, x='Correlacao', y='Indicador', orientation='h', text=df_importancia['Correlacao'].apply(lambda x: f'{x:.2f}'), color='Correlacao', color_continuous_scale='Viridis', title="Influência dos Comportamentos no IPV")
-            fig_bar.update_layout(xaxis_range=[0, 1], showlegend=False, coloraxis_showscale=False)
-            fig_bar.update_traces(textposition='outside', textfont=dict(weight='bold'))
-            st.plotly_chart(fig_bar, use_container_width=True)
-        with c2:
-            fig_trend = px.scatter(df_corr_data, x='ieg', y='ipv', trendline="ols", trendline_color_override="darkviolet", title="Tendência: Engajamento vs Ponto de Virada", opacity=0.3)
-            fig_trend.update_traces(marker=dict(color='purple'))
-            st.plotly_chart(fig_trend, use_container_width=True)
+        # 1. Preparar os dados (garantindo conversão e minúsculas para o app)
+        cols_analise = ['ipv', 'ida', 'ieg', 'iaa', 'ips', 'ipp']
+        df_q7 = df[cols_analise].copy()
+
+        for col in cols_analise:
+            df_q7[col] = df_q7[col].astype(str).str.replace(',', '.')
+            df_q7[col] = pd.to_numeric(df_q7[col], errors='coerce')
+
+        # 2. Calcular matriz de correlação com o IPV
+        corr_geral = df_q7.corr()[['ipv']].drop('ipv')
+
+        # Renomear indicadores para ficar legível e amigável no gráfico
+        renomeio_indicadores = {
+            'ida': 'Desempenho (IDA)',
+            'ieg': 'Engajamento (IEG)',
+            'iaa': 'Autoavaliação (IAA)',
+            'ips': 'Psicossocial (IPS)',
+            'ipp': 'Psicopedagógico (IPP)'
+        }
+        corr_geral = corr_geral.rename(index=renomeio_indicadores)
+        corr_geral.columns = ['Correlação']
+
+        # Ordenar do maior para o menor (como no seu Colab)
+        corr_geral = corr_geral.sort_values(by='Correlação', ascending=True).reset_index()
+        corr_geral.columns = ['Indicador', 'Correlação']
+
+        # 3. Gráfico de Barras Horizontais no Plotly
+        fig7 = px.bar(
+            corr_geral,
+            x='Correlação',
+            y='Indicador',
+            orientation='h',
+            text=corr_geral['Correlação'].apply(lambda x: f'{x:.2f}'),
+            title='Influência dos Comportamentos no Ponto de Virada (IPV)<br><sup>Visão Consolidada (2022 - 2024)</sup>',
+            color='Correlação',
+            color_continuous_scale='Viridis'
+        )
+
+        fig7.update_layout(
+            xaxis_title="Correlação de Pearson com o IPV",
+            yaxis_title="Indicadores Analisados",
+            xaxis=dict(range=[-0.1, 1.05]), # Respiro para o texto da barra caber
+            coloraxis_showscale=False # Oculta a barra lateral de cores para ficar mais limpo
+        )
+        
+        fig7.update_traces(textposition='outside', textfont=dict(size=12, weight='bold'))
+
+        st.plotly_chart(fig7, use_container_width=True)
+        
+        # Opcional: Tabela de apoio resumida
+        st.dataframe(corr_geral.set_index('Indicador').sort_values(by='Correlação', ascending=False).round(3), use_container_width=True)
 
 with st.expander("8. Multidimensionalidade dos indicadores"):
         st.markdown("**Análise:** Quanto mais indicadores o aluno consegue manter acima da mediana, maior é a sua nota final, confirmando a visão holística do programa.")
