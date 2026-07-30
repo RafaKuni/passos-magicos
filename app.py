@@ -150,9 +150,13 @@ with st.expander("1. Adequação do nível (IAN)"):
         
         df_q1 = df.copy()
         
-        # 1. Regra de negócio: 4 níveis de IAN
+        # Tratamento da coluna IAN
+        df_q1['ian'] = df_q1['ian'].astype(str).str.replace(',', '.')
+        df_q1['ian'] = pd.to_numeric(df_q1['ian'], errors='coerce')
+        
+        # 1. Regra de negócio
         def classificar_ian(v):
-            if pd.isna(v): return np.nan
+            if pd.isna(v): return None
             if v >= 7.5: return 'Em fase'
             elif v >= 5.0: return 'Defasagem leve'
             elif v >= 2.5: return 'Defasagem moderada'
@@ -160,30 +164,44 @@ with st.expander("1. Adequação do nível (IAN)"):
             
         df_q1['ian_cat'] = df_q1['ian'].apply(classificar_ian)
         
-        # 2. Forçar a ORDEM EXATA no Pandas (evita que o gráfico embaralhe)
         ordem_niveis = ['Em fase', 'Defasagem leve', 'Defasagem moderada', 'Defasagem severa']
-        df_q1['ian_cat'] = pd.Categorical(df_q1['ian_cat'], categories=ordem_niveis, ordered=True)
         
-        # 3. Agrupamento em números absolutos e ordenação
-        df_ian = df_q1.groupby(['ano_referencia', 'ian_cat']).size().reset_index(name='quantidade')
-        df_ian = df_ian.sort_values(['ano_referencia', 'ian_cat'])
+        # 2. Agrupamento inicial
+        df_ian_bruto = df_q1.groupby(['ano_referencia', 'ian_cat']).size().reset_index(name='quantidade')
         
-        # 4. Gráfico Plotly integrado ao layout
+        # 3. TRUQUE: Cria todas as combinações possíveis para forçar os "zeros" a aparecerem
+        anos = df_ian_bruto['ano_referencia'].unique()
+        todas_combinacoes = pd.MultiIndex.from_product([anos, ordem_niveis], names=['ano_referencia', 'ian_cat']).to_frame(index=False)
+        df_ian = pd.merge(todas_combinacoes, df_ian_bruto, on=['ano_referencia', 'ian_cat'], how='left').fillna({'quantidade': 0})
+        
+        # 4. Mapa de cores fixo
+        mapa_cores = {
+            'Em fase': '#2ecc71', 
+            'Defasagem leve': '#f1c40f', 
+            'Defasagem moderada': '#e67e22', 
+            'Defasagem severa': '#e74c3c'
+        }
+
+        # Gráfico
         fig1 = px.bar(
             df_ian, 
             x='ano_referencia', 
             y='quantidade', 
             color='ian_cat', 
-            text='quantidade',
+            # Mostra o número só se for maior que zero para não sujar o gráfico
+            text=df_ian['quantidade'].apply(lambda x: int(x) if x > 0 else ""), 
             barmode='stack',
             title="Quantidade de Alunos por Nível de Defasagem (IAN)",
-            category_orders={'ian_cat': ordem_niveis}, # Reforça a ordem no Plotly
-            color_discrete_sequence=['#2ecc71', '#f1c40f', '#e67e22', '#e74c3c'] # Verde, Amarelo, Laranja, Vermelho
+            category_orders={'ian_cat': ordem_niveis}, 
+            color_discrete_map=mapa_cores
         )
+        
         fig1.update_layout(xaxis=dict(dtick=1), xaxis_title="Ano de Referência", yaxis_title="Qtd. de Alunos", legend_title="Nível IAN")
         fig1.update_traces(textposition='inside', textfont=dict(color='white', size=14, weight='bold'))
         
         st.plotly_chart(fig1, use_container_width=True)
+
+
 
 with st.expander("2. Desempenho acadêmico (IDA)"):
         st.markdown("""
