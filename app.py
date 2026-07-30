@@ -610,6 +610,19 @@ with st.expander("9. Previsão de Risco com Machine Learning (Regressão Logíst
         de um aluno entrar em risco de defasagem (`Defasagem < 0`) com base em seus pilares (IDA, IEG, IPS, IAA, IPP).
         """)
 
+    from sklearn.preprocessing import StandardScaler
+                
+                # Normalizar as features para que os coeficientes fiquem na mesma escala de importância
+                scaler = StandardScaler()
+                X_train_scaled = scaler.fit_transform(X_train)
+                X_test_scaled = scaler.transform(X_test)
+
+                modelo_lr = LogisticRegression(random_state=42, class_weight='balanced')
+                modelo_lr.fit(X_train_scaled, y_train)
+
+                y_pred = modelo_lr.predict(X_test_scaled)
+                y_proba = modelo_lr.predict_proba(X_test_scaled)[:, 1]
+
         # 1. Preparar cópia e limpar colunas (tudo em minúsculo)
         df_q9 = df.copy()
         df_q9.columns = [str(col).strip().lower() for col in df_q9.columns]
