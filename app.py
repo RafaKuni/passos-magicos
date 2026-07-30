@@ -134,57 +134,141 @@ with aba1:
     else:
         st.info("Base de dados 'base_modelagem.csv' não carregada. As métricas estão ocultas.")
 
-# ==============================================================================
-# ABA 2: QUESTÕES TÉCNICAS (Mantendo a estrutura exigida)
-# ==============================================================================
-# ==============================================================================
-# ABA 2: QUESTÕES TÉCNICAS (RESTORE COMPLETO E FIEL)
-# ==============================================================================
+
+# ABA 2: QUESTÕES TÉCNICAS
+
+
 with aba2:
     st.header("🔍 Resumo das Respostas às Questões Estratégicas")
 
-    with st.expander("1. Adequação do nível (IAN)"):
+with st.expander("1. Adequação do nível (IAN)"):
         st.markdown("""
-        **Análise:** O perfil de defasagem dos alunos, medido pelo IAN, demonstra uma trajetória de recuperação acadêmica consistente. 
-        A metodologia aplicada está conseguindo reduzir as lacunas educacionais ano após ano.
+        **Análise:** O perfil de defasagem dos alunos, medido pelo IAN, demonstra a trajetória de recuperação acadêmica 
+        em números absolutos ao longo dos anos, separada em quatro níveis de atenção.
         """)
-        # 1. Preparar os dados
-        ian_counts = df.groupby(['ano_referencia', 'ian_cat']).size().unstack(fill_value=0)
-        ian_pct = ian_counts.div(ian_counts.sum(axis=1), axis=0) * 100
-        df_ian_plot = ian_pct.reset_index().melt(id_vars='ano_referencia', var_name='ian_cat', value_name='percentual')
-
-        # 2. Criar o gráfico
-        fig1 = px.bar(
-            df_ian_plot, x='ano_referencia', y='percentual', color='ian_cat',
-            text=df_ian_plot['percentual'].apply(lambda x: f'{x:.1f}%' if x > 2 else ''),
-            color_discrete_sequence=px.colors.sequential.Viridis,
-            title="Distribuição Percentual da Adequação de Nível (IAN) por Ano"
+        
+        df_q1 = df.copy()
+        
+        # 1. Regra de negócio: 4 níveis de IAN
+        df_q1['ian_cat'] = df_q1['ian'].apply(
+            lambda v: 'Em fase' if v >= 7.5 else (
+                'Defasagem leve' if v >= 5.0 else (
+                    'Defasagem moderada' if v >= 2.5 else 'Defasagem severa'
+                )
+            )
         )
-        fig1.update_layout(barmode='stack', xaxis_title="Ano de Referência", yaxis_title="Porcentagem de Alunos (%)", legend_title="Categoria IAN", xaxis=dict(dtick=1), yaxis=dict(range=[0, 105]))
-        fig1.update_traces(textposition='inside', textfont=dict(color='white', size=12))
+        
+        # 2. Agrupamento em números absolutos
+        df_ian = df_q1.groupby(['ano_referencia', 'ian_cat']).size().reset_index(name='quantidade')
+        
+        # 3. Gráfico Plotly integrado ao layout
+        fig1 = px.bar(
+            df_ian, 
+            x='ano_referencia', 
+            y='quantidade', 
+            color='ian_cat', 
+            text='quantidade',
+            barmode='stack',
+            title="Quantidade de Alunos por Nível de Defasagem (IAN)",
+            category_orders={'ian_cat': ['Em fase', 'Defasagem leve', 'Defasagem moderada', 'Defasagem severa']},
+            color_discrete_sequence=['#2ecc71', '#f1c40f', '#e67e22', '#e74c3c']
+        )
+        fig1.update_layout(xaxis=dict(dtick=1), xaxis_title="Ano de Referência", yaxis_title="Qtd. de Alunos", legend_title="Nível IAN")
+        fig1.update_traces(textposition='inside', textfont=dict(color='white', size=14, weight='bold'))
+        
         st.plotly_chart(fig1, use_container_width=True)
 
     with st.expander("2. Desempenho acadêmico (IDA)"):
-        st.markdown("**Análise:** A análise do  IDA revela um cenário de amadurecimento institucional e eficácia metodológica.")
-        st.plotly_chart(px.line(df.groupby(['ano_referencia', 'fase'])['ida'].mean().reset_index(), x='ano_referencia', y='ida', color='fase', markers=True), use_container_width=True)
-
-    with st.expander("3. Engajamento (IEG)"):
-        st.markdown("""**Análise:** A análise de correlação entre o Engajamento (IEG), o Desempenho Acadêmico (IDA) e o Ponto de Virada (IPV) 
-        revela que existe uma relação direta e positiva, embora a força dessa conexão varie entre os indicadores.""")
-        df_corr_data = df[['ieg', 'ida', 'ipv']].dropna()
-        corr_matrix = df_corr_data.corr()
+        st.markdown("""
+        **Análise:** Acompanhamento do Desempenho Acadêmico Médio (IDA). À esquerda, a evolução global por ano. 
+        À direita, o comportamento do IDA ao longo do avanço nas fases do programa.
+        """)
         
+        # 1. Regra de negócio: Extrair número da fase
+        def extrair_numero_fase(valor):
+            if pd.isna(valor): return np.nan
+            texto = str(valor).strip().upper()
+            if 'ALFA' in texto: return 0
+            numeros = re.findall(r'\d+', texto)
+            return int(numeros[0]) if numeros else np.nan
+
+        df_q2 = df.copy()
+        df_q2['fase_numerica'] = df_q2['fase'].apply(extrair_numero_fase)
+        
+        # Estrutura de colunas do Streamlit
         c1, c2 = st.columns(2)
+        
         with c1:
-            r_ida = corr_matrix.loc["ieg", "ida"]
-            fig_ieg_ida = px.scatter(df_corr_data, x='ieg', y='ida', trendline="ols", trendline_color_override="red", title=f"Correlação Engajamento vs Acadêmico<br><sup>(r = {r_ida:.2f})</sup>", opacity=0.3)
-            fig_ieg_ida.update_traces(marker=dict(color='teal'))
-            st.plotly_chart(fig_ieg_ida, use_container_width=True)
+            # Gráfico de Barras: IDA por Ano
+            df_ida_ano = df_q2.groupby('ano_referencia')['ida'].mean().reset_index()
+            fig2a = px.bar(
+                df_ida_ano, x='ano_referencia', y='ida', 
+                text=df_ida_ano['ida'].apply(lambda x: f'{x:.2f}'),
+                title="Média do IDA por Ano",
+                color_discrete_sequence=['#3498db']
+            )
+            fig2a.update_layout(yaxis=dict(range=[0, 10]), xaxis=dict(dtick=1), xaxis_title="Ano", yaxis_title="Nota Média (IDA)")
+            fig2a.update_traces(textposition='outside', textfont=dict(size=12, weight='bold'))
+            st.plotly_chart(fig2a, use_container_width=True)
+            
         with c2:
-            r_ipv = corr_matrix.loc["ieg", "ipv"]
-            fig_ieg_ipv = px.scatter(df_corr_data, x='ieg', y='ipv', trendline="ols", trendline_color_override="blue", title=f"Correlação Engajamento vs Ponto de Virada<br><sup>(r = {r_ipv:.2f})</sup>", opacity=0.3)
-            fig_ieg_ipv.update_traces(marker=dict(color='coral'))
-            st.plotly_chart(fig_ieg_ipv, use_container_width=True)
+            # Gráfico de Linhas: IDA por Fase
+            df_ida_fase = df_q2.dropna(subset=['fase_numerica', 'ano_referencia', 'ida'])
+            df_ida_fase_grp = df_ida_fase.groupby(['fase_numerica', 'ano_referencia'])['ida'].mean().reset_index()
+            df_ida_fase_grp['ano_referencia'] = df_ida_fase_grp['ano_referencia'].astype(str)
+            
+            fig2b = px.line(
+                df_ida_fase_grp, x='fase_numerica', y='ida', color='ano_referencia', 
+                markers=True, title="IDA ao longo das Fases",
+                color_discrete_sequence=['#2ca02c', '#ff7f0e', '#d62728']
+            )
+            fig2b.update_traces(marker=dict(size=10), line=dict(width=3))
+            fig2b.update_layout(yaxis=dict(range=[0, 10]), xaxis=dict(dtick=1), xaxis_title="Fase do Aluno (0 = Alfa)", yaxis_title="Nota Média (IDA)", legend_title="Ano")
+            st.plotly_chart(fig2b, use_container_width=True)
+
+    with st.expander("3. Influência dos comportamentos no IPV ao longo do tempo"):
+        st.markdown("""
+        **Análise:** Integração das análises de Engajamento (IEG) e Ponto de Virada (IPV). 
+        Avalia a força da correlação dos pilares acadêmicos, emocionais e de engajamento na construção do IPV, ano a ano.
+        """)
+        
+        # 1. Regra de negócio: Correlação cruzada ao longo do tempo
+        cols_analise = ['ipv', 'ida', 'ieg', 'iaa', 'ips', 'ipp', 'ano_referencia']
+        df_q3 = df.copy()
+        
+        # Lista para guardar as correlações
+        correlacoes_ano = []
+        anos_disponiveis = sorted(df_q3['ano_referencia'].dropna().unique())
+
+        for ano in anos_disponiveis:
+            df_ano = df_q3[df_q3['ano_referencia'] == ano][cols_analise[:-1]]
+            corr = df_ano.corr()[['ipv']].drop('ipv')
+            corr.columns = [str(int(ano))]
+            correlacoes_ano.append(corr)
+
+        # Junta e renomeia
+        df_corr = pd.concat(correlacoes_ano, axis=1)
+        renomeio_indicadores = {
+            'ida': 'Desempenho (IDA)', 'ieg': 'Engajamento (IEG)',
+            'iaa': 'Autoavaliação (IAA)', 'ips': 'Psicossocial (IPS)', 'ipp': 'Psicopedagógico (IPP)'
+        }
+        df_corr.rename(index=renomeio_indicadores, inplace=True)
+
+        # Transforma os dados para o padrão do Plotly Express (Melt)
+        df_corr_melted = df_corr.reset_index().melt(id_vars='index', var_name='ano', value_name='correlacao')
+        df_corr_melted.rename(columns={'index': 'Indicador'}, inplace=True)
+
+        # 2. Gráfico Plotly Integrado (Barras Agrupadas)
+        fig3 = px.bar(
+            df_corr_melted, x='ano', y='correlacao', color='Indicador', barmode='group',
+            text=df_corr_melted['correlacao'].apply(lambda x: f'{x:.2f}' if pd.notna(x) else ''),
+            title="Quais comportamentos mais influenciam o Ponto de Virada (IPV)?",
+            color_discrete_sequence=['#3498db', '#e67e22', '#2ecc71', '#e74c3c', '#9b59b6']
+        )
+        fig3.update_layout(yaxis=dict(range=[0, 1.05]), xaxis_title="Ano da Pesquisa", yaxis_title="Correlação com o IPV", legend_title="Pilares")
+        fig3.update_traces(textposition='outside', textfont=dict(size=11))
+        
+        st.plotly_chart(fig3, use_container_width=True)
 
     with st.expander("4. Autoavaliação (IAA)"):
         st.markdown("""**Análise:** A análise da Autoavaliação (IAA) em relação aos dados reais traz um dos resultados mais curiosos: 
