@@ -390,8 +390,7 @@ with st.expander("5. Aspectos psicossociais (IPS) - Há padrões psicossociais (
             fig_ips_ieg.update_layout(xaxis_title="Indicador Psicossocial (IPS)", yaxis_title="Engajamento nas Atividades (IEG)")
             st.plotly_chart(fig_ips_ieg, use_container_width=True)
 
-with st.expander("6. Aspectos psicopedagógicos (IPP)"):
-        with st.expander("6. Aspectos psicopedagógicos (IPP)"):
+with st.expander("6. Aspectos psicopedagógicos (IPP) - As avaliações psicopedagógicas (IPP) confirmam ou contradizem a defasagem identificada pelo IAN?"):
         st.markdown("""
         **Análise:** As avaliações psicopedagógicas (IPP) são comparadas com os níveis de defasagem dos alunos 
         para entender se a avaliação profissional de desenvolvimento corrobora com o atraso acadêmico medido.
