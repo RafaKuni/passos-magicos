@@ -151,18 +151,24 @@ with st.expander("1. Adequação do nível (IAN)"):
         df_q1 = df.copy()
         
         # 1. Regra de negócio: 4 níveis de IAN
-        df_q1['ian_cat'] = df_q1['ian'].apply(
-            lambda v: 'Em fase' if v >= 7.5 else (
-                'Defasagem leve' if v >= 5.0 else (
-                    'Defasagem moderada' if v >= 2.5 else 'Defasagem severa'
-                )
-            )
-        )
+        def classificar_ian(v):
+            if pd.isna(v): return np.nan
+            if v >= 7.5: return 'Em fase'
+            elif v >= 5.0: return 'Defasagem leve'
+            elif v >= 2.5: return 'Defasagem moderada'
+            else: return 'Defasagem severa'
+            
+        df_q1['ian_cat'] = df_q1['ian'].apply(classificar_ian)
         
-        # 2. Agrupamento em números absolutos
+        # 2. Forçar a ORDEM EXATA no Pandas (evita que o gráfico embaralhe)
+        ordem_niveis = ['Em fase', 'Defasagem leve', 'Defasagem moderada', 'Defasagem severa']
+        df_q1['ian_cat'] = pd.Categorical(df_q1['ian_cat'], categories=ordem_niveis, ordered=True)
+        
+        # 3. Agrupamento em números absolutos e ordenação
         df_ian = df_q1.groupby(['ano_referencia', 'ian_cat']).size().reset_index(name='quantidade')
+        df_ian = df_ian.sort_values(['ano_referencia', 'ian_cat'])
         
-        # 3. Gráfico Plotly integrado ao layout
+        # 4. Gráfico Plotly integrado ao layout
         fig1 = px.bar(
             df_ian, 
             x='ano_referencia', 
@@ -171,8 +177,8 @@ with st.expander("1. Adequação do nível (IAN)"):
             text='quantidade',
             barmode='stack',
             title="Quantidade de Alunos por Nível de Defasagem (IAN)",
-            category_orders={'ian_cat': ['Em fase', 'Defasagem leve', 'Defasagem moderada', 'Defasagem severa']},
-            color_discrete_sequence=['#2ecc71', '#f1c40f', '#e67e22', '#e74c3c']
+            category_orders={'ian_cat': ordem_niveis}, # Reforça a ordem no Plotly
+            color_discrete_sequence=['#2ecc71', '#f1c40f', '#e67e22', '#e74c3c'] # Verde, Amarelo, Laranja, Vermelho
         )
         fig1.update_layout(xaxis=dict(dtick=1), xaxis_title="Ano de Referência", yaxis_title="Qtd. de Alunos", legend_title="Nível IAN")
         fig1.update_traces(textposition='inside', textfont=dict(color='white', size=14, weight='bold'))
