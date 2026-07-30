@@ -252,49 +252,52 @@ with st.expander("2. Desempenho acadêmico (IDA) - O desempenho acadêmico médi
             fig2b.update_layout(yaxis=dict(range=[0, 10]), xaxis=dict(dtick=1), xaxis_title="Fase do Aluno (0 = Alfa)", yaxis_title="Nota Média (IDA)", legend_title="Ano")
             st.plotly_chart(fig2b, use_container_width=True)
 
-with st.expander("3. Influência dos comportamentos no IPV ao longo do tempo"):
+with st.expander("3. Engajamento nas atividades (IEG) - O grau de engajamento dos alunos (IEG) tem relação direta com seus indicadores de desempenho (IDA) e do ponto de virada (IPV)?"):
         st.markdown("""
-        **Análise:** Integração das análises de Engajamento (IEG) e Ponto de Virada (IPV). 
-        Avalia a força da correlação dos pilares acadêmicos, emocionais e de engajamento na construção do IPV, ano a ano.
+        **Análise:** A análise de correlação entre o Engajamento (IEG), o Desempenho Acadêmico (IDA) e o Ponto de Virada (IPV) 
+        revela que existe uma relação direta e positiva, embora a força dessa conexão varie entre os indicadores.
         """)
+
+        # Garantir que os dados são numéricos (tratando possíveis vírgulas)
+        df_corr_data = df[['ieg', 'ida', 'ipv']].copy()
+        for col in ['ieg', 'ida', 'ipv']:
+            df_corr_data[col] = df_corr_data[col].astype(str).str.replace(',', '.')
+            df_corr_data[col] = pd.to_numeric(df_corr_data[col], errors='coerce')
+            
+        # 1. Preparar os dados (Remover nulos como no Colab)
+        df_corr_data = df_corr_data.dropna()
+        corr_matrix = df_corr_data.corr()
         
-        # 1. Regra de negócio: Correlação cruzada ao longo do tempo
-        cols_analise = ['ipv', 'ida', 'ieg', 'iaa', 'ips', 'ipp', 'ano_referencia']
-        df_q3 = df.copy()
-        
-        # Lista para guardar as correlações
-        correlacoes_ano = []
-        anos_disponiveis = sorted(df_q3['ano_referencia'].dropna().unique())
+        # 2. Criar Colunas no Streamlit para os dois gráficos
+        c1, c2 = st.columns(2)
 
-        for ano in anos_disponiveis:
-            df_ano = df_q3[df_q3['ano_referencia'] == ano][cols_analise[:-1]]
-            corr = df_ano.corr()[['ipv']].drop('ipv')
-            corr.columns = [str(int(ano))]
-            correlacoes_ano.append(corr)
+        with c1:
+            # Gráfico 1: IEG vs IDA (Teal com linha Vermelha)
+            r_ida = corr_matrix.loc["ieg", "ida"]
+            fig_ieg_ida = px.scatter(
+                df_corr_data, x='ieg', y='ida', 
+                trendline="ols",
+                trendline_color_override="red",
+                title=f"Correlação Engajamento vs Acadêmico<br><sup>(r = {r_ida:.2f})</sup>",
+                opacity=0.3
+            )
+            fig_ieg_ida.update_traces(marker=dict(color='teal'))
+            fig_ieg_ida.update_layout(xaxis_title="Engajamento (IEG)", yaxis_title="Desempenho Acadêmico (IDA)")
+            st.plotly_chart(fig_ieg_ida, use_container_width=True)
 
-        # Junta e renomeia
-        df_corr = pd.concat(correlacoes_ano, axis=1)
-        renomeio_indicadores = {
-            'ida': 'Desempenho (IDA)', 'ieg': 'Engajamento (IEG)',
-            'iaa': 'Autoavaliação (IAA)', 'ips': 'Psicossocial (IPS)', 'ipp': 'Psicopedagógico (IPP)'
-        }
-        df_corr.rename(index=renomeio_indicadores, inplace=True)
-
-        # Transforma os dados para o padrão do Plotly Express (Melt)
-        df_corr_melted = df_corr.reset_index().melt(id_vars='index', var_name='ano', value_name='correlacao')
-        df_corr_melted.rename(columns={'index': 'Indicador'}, inplace=True)
-
-        # 2. Gráfico Plotly Integrado (Barras Agrupadas)
-        fig3 = px.bar(
-            df_corr_melted, x='ano', y='correlacao', color='Indicador', barmode='group',
-            text=df_corr_melted['correlacao'].apply(lambda x: f'{x:.2f}' if pd.notna(x) else ''),
-            title="Quais comportamentos mais influenciam o Ponto de Virada (IPV)?",
-            color_discrete_sequence=['#3498db', '#e67e22', '#2ecc71', '#e74c3c', '#9b59b6']
-        )
-        fig3.update_layout(yaxis=dict(range=[0, 1.05]), xaxis_title="Ano da Pesquisa", yaxis_title="Correlação com o IPV", legend_title="Pilares")
-        fig3.update_traces(textposition='outside', textfont=dict(size=11))
-        
-        st.plotly_chart(fig3, use_container_width=True)
+        with c2:
+            # Gráfico 2: IEG vs IPV (Coral com linha Azul)
+            r_ipv = corr_matrix.loc["ieg", "ipv"]
+            fig_ieg_ipv = px.scatter(
+                df_corr_data, x='ieg', y='ipv', 
+                trendline="ols",
+                trendline_color_override="blue",
+                title=f"Correlação Engajamento vs Ponto de Virada<br><sup>(r = {r_ipv:.2f})</sup>",
+                opacity=0.3
+            )
+            fig_ieg_ipv.update_traces(marker=dict(color='coral'))
+            fig_ieg_ipv.update_layout(xaxis_title="Engajamento (IEG)", yaxis_title="Ponto de Virada (IPV)")
+            st.plotly_chart(fig_ieg_ipv, use_container_width=True)
 
 with st.expander("4. Autoavaliação (IAA)"):
         st.markdown("""**Análise:** A análise da Autoavaliação (IAA) em relação aos dados reais traz um dos resultados mais curiosos: 
