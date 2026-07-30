@@ -45,7 +45,7 @@ except Exception as e:
 with st.sidebar:
     # Logo Centralizada
     try:
-        st.image("logo.png", use_container_width=True)
+        st.image("Passos-magicos-icon-cor.png", use_container_width=True)
     except:
         st.warning("⚠️ Logo não encontrada.")
     
