@@ -10,13 +10,23 @@ import warnings
 # CARREGAMENTO DE DADOS
 # ==============================================================================
 
-# 1. Base Bruta para as Abas 1 e 2 (Business Intelligence / Gráficos)
-df = pd.read_csv("PEDE_Consolidado_2022_2024.csv")
+# 1. Lendo a base bruta forçando o separador ponto e vírgula
+# (Se o seu arquivo usar vírgula, basta trocar sep=";" por sep=",")
+df = pd.read_csv("PEDE_Consolidado_2022_2024.csv", sep=";")
 
-# 2. Base Tratada para as Abas 3 e 4 (Machine Learning / Simulador)
-df_ml = pd.read_csv("base_modelagem.csv")
+# 2. Garantir que todas as colunas fiquem minúsculas (evita erro de 'Ano' vs 'ano')
+df.columns = df.columns.str.lower()
 
-# Carregamento do Modelo
+# 3. Se a coluna 'ian_cat' não estiver no CSV original, recriamos ela na hora!
+if 'ian_cat' not in df.columns and 'ian' in df.columns:
+    df['ian_cat'] = df['ian'].apply(
+        lambda v: 'Adequado' if v >= 9.0 else ('Defasagem Moderada' if v >= 5.0 else 'Defasagem Severa')
+    )
+
+# 4. Base Tratada para o Simulador ML
+df_ml = pd.read_csv("base_modelagem.csv", sep=";") # Adicione o sep=";" aqui também por precaução
+
+# 5. Carregamento do Modelo Otimizado
 modelo = joblib.load("modelo_passos_magicos_otimizado.pkl")
 
 # ==============================================================================
