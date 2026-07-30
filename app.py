@@ -179,7 +179,7 @@ with st.expander("1. Adequação do nível (IAN)"):
         
         st.plotly_chart(fig1, use_container_width=True)
 
-    with st.expander("2. Desempenho acadêmico (IDA)"):
+with st.expander("2. Desempenho acadêmico (IDA)"):
         st.markdown("""
         **Análise:** Acompanhamento do Desempenho Acadêmico Médio (IDA). À esquerda, a evolução global por ano. 
         À direita, o comportamento do IDA ao longo do avanço nas fases do programa.
@@ -227,7 +227,7 @@ with st.expander("1. Adequação do nível (IAN)"):
             fig2b.update_layout(yaxis=dict(range=[0, 10]), xaxis=dict(dtick=1), xaxis_title="Fase do Aluno (0 = Alfa)", yaxis_title="Nota Média (IDA)", legend_title="Ano")
             st.plotly_chart(fig2b, use_container_width=True)
 
-    with st.expander("3. Influência dos comportamentos no IPV ao longo do tempo"):
+with st.expander("3. Influência dos comportamentos no IPV ao longo do tempo"):
         st.markdown("""
         **Análise:** Integração das análises de Engajamento (IEG) e Ponto de Virada (IPV). 
         Avalia a força da correlação dos pilares acadêmicos, emocionais e de engajamento na construção do IPV, ano a ano.
