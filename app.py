@@ -17,7 +17,7 @@ df = pd.read_csv("PEDE_Consolidado_2022_2024.csv")
 df_ml = pd.read_csv("base_modelagem.csv")
 
 # Carregamento do Modelo
-modelo = joblib.load("modelo_passos_magicos.pkl")
+modelo = joblib.load("modelo_passos_magicos_otimizado.pkl")
 
 # ==============================================================================
 # 2. MENU LATERAL - CONFIGURAÇÕES E INFORMAÇÕES
