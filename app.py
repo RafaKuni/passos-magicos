@@ -21,10 +21,14 @@ df.columns = df.columns.str.lower()
 if 'ano_pesquisa' in df.columns:
     df.rename(columns={'ano_pesquisa': 'ano_referencia'}, inplace=True)
 
-# 4. Criar a categoria IAN (para o gráfico 1 de barras empilhadas)
+# 4. Criar a categoria IAN com 4 níveis
 if 'ian_cat' not in df.columns and 'ian' in df.columns:
     df['ian_cat'] = df['ian'].apply(
-        lambda v: 'Adequado' if v >= 9.0 else ('Defasagem Moderada' if v >= 5.0 else 'Defasagem Severa')
+        lambda v: 'Em fase' if v >= 7.5 else (
+            'Defasagem leve' if v >= 5.0 else (
+                'Defasagem moderada' if v >= 2.5 else 'Defasagem severa'
+            )
+        )
     )
 
 # 5. Criar a coluna "pedra" genérica (vamos usar a Fase, já que seus gráficos pedem)
