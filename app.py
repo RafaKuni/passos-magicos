@@ -36,6 +36,12 @@ if 'inde_ano' not in df.columns:
     colunas_inde = [c for c in df.columns if 'inde' in c]
     
     if len(colunas_inde) > 0:
+        # TRATAMENTO NOVO: Força todas as colunas INDE a virarem números puros
+        for col in colunas_inde:
+            # Troca vírgula por ponto e converte para número (erros viram 'vazio' / NaN)
+            df[col] = df[col].astype(str).str.replace(',', '.')
+            df[col] = pd.to_numeric(df[col], errors='coerce')
+            
         # Pega a nota INDE válida do aluno, ignorando os nulos das outras colunas
         df['inde_ano'] = df[colunas_inde].max(axis=1)
     else:
