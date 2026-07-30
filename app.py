@@ -30,6 +30,18 @@ if 'ian_cat' not in df.columns and 'ian' in df.columns:
 if 'pedra' not in df.columns and 'fase' in df.columns:
     df['pedra'] = df['fase']
 
+# 6. Consolidar a coluna INDE (Junta INDE 22, 23, 2024 em uma só chamada 'inde_ano')
+if 'inde_ano' not in df.columns:
+    # Acha todas as colunas que têm a palavra 'inde'
+    colunas_inde = [c for c in df.columns if 'inde' in c]
+    
+    if len(colunas_inde) > 0:
+        # Pega a nota INDE válida do aluno, ignorando os nulos das outras colunas
+        df['inde_ano'] = df[colunas_inde].max(axis=1)
+    else:
+        # Fallback de segurança para não quebrar os gráficos
+        df['inde_ano'] = df['ida']
+
 # ==============================================================================
 # CARREGAMENTO DO MOTOR DE MACHINE LEARNING
 # ==============================================================================
@@ -87,6 +99,8 @@ aba1, aba2, aba3, aba4 = st.tabs([
 # ==============================================================================
 # ABA 1: VISÃO DOS DADOS
 # ==============================================================================
+
+
 with aba1:
     st.header("Análise Geral da Base de Modelagem")
     
