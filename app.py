@@ -142,7 +142,7 @@ with aba1:
 with aba2:
     st.header("🔍 Resumo das Respostas às Questões Estratégicas")
 
-with st.expander("1. Adequação do nível (IAN)"):
+with st.expander("1. Adequação do nível (IAN) - Qual é o perfil geral de defasagem dos alunos (IAN) e como ele evolui ao longo do ano?"):
         st.markdown("""
         **Análise:** O perfil de defasagem dos alunos demonstra a trajetória de recuperação acadêmica 
         em números absolutos ao longo dos anos, separada em quatro níveis de atenção.
@@ -204,7 +204,7 @@ with st.expander("1. Adequação do nível (IAN)"):
         st.plotly_chart(fig1, use_container_width=True)
 
 
-with st.expander("2. Desempenho acadêmico (IDA)"):
+with st.expander("2. Desempenho acadêmico (IDA) - O desempenho acadêmico médio (IDA) está melhorando, estagnado ou caindo ao longo das fases e anos?"):
         st.markdown("""
         **Análise:** Acompanhamento do Desempenho Acadêmico Médio (IDA). À esquerda, a evolução global por ano. 
         À direita, o comportamento do IDA ao longo do avanço nas fases do programa.
