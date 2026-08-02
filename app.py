@@ -170,7 +170,7 @@ with aba1:
 
         st.markdown("---")
         
-        st.markdown("### Alunos com Maior Probabilidade de Risco")
+st.markdown("### Alunos com Maior Probabilidade de Risco")
         
         # Procura as colunas exatas
         cols_desejadas = {
@@ -204,6 +204,15 @@ with aba1:
             df_risco = df[cols_tabela].copy()
             df_risco.rename(columns=col_mapping, inplace=True)
             
+            # ---------------------------------------------------------
+            # NOVIDADE AQUI: Remove a PEDRA se for clone da FASE
+            # ---------------------------------------------------------
+            if 'PEDRA' in df_risco.columns and 'FASE' in df_risco.columns:
+                # Verifica se as colunas são cópias uma da outra
+                iguais = (df_risco['PEDRA'].astype(str) == df_risco['FASE'].astype(str)).mean()
+                if iguais > 0.95: 
+                    df_risco = df_risco.drop(columns=['PEDRA'])
+                    
             # Garante que IDA, IEG e INDE são numéricos para podermos formatar as casas decimais
             for col_num in ['IDA', 'IEG', 'INDE']:
                 if col_num in df_risco.columns:
@@ -232,7 +241,6 @@ with aba1:
             )
         else:
             st.warning("Colunas necessárias para montar a tabela de risco (RA, Fase, IDA, etc.) não foram encontradas.")
-
 # ==============================================================================
 # ABA 2: QUESTÕES TÉCNICAS
 # ==============================================================================
