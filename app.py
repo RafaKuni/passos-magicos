@@ -139,13 +139,14 @@ with aba1:
         st.info("Base de dados 'base_modelagem.csv' não carregada. As métricas estão ocultas.")
 
 
+# ==============================================================================
 # ABA 2: QUESTÕES TÉCNICAS
-
+# ==============================================================================
 
 with aba2:
     st.header("🔍 Resumo das Respostas às Questões Estratégicas")
 
-with st.expander("1. Adequação do nível (IAN) - Qual é o perfil geral de defasagem dos alunos (IAN) e como ele evolui ao longo do ano?"):
+    with st.expander("1. Adequação do nível (IAN) - Qual é o perfil geral de defasagem dos alunos (IAN) e como ele evolui ao longo do ano?"):
         st.markdown("""
         **Análise:** O perfil de defasagem dos alunos demonstra a trajetória de recuperação acadêmica 
         em números absolutos ao longo dos anos, separada em quatro níveis de atenção.
@@ -207,7 +208,7 @@ with st.expander("1. Adequação do nível (IAN) - Qual é o perfil geral de def
         st.plotly_chart(fig1, use_container_width=True)
 
 
-with st.expander("2. Desempenho acadêmico (IDA) - O desempenho acadêmico médio (IDA) está melhorando, estagnado ou caindo ao longo das fases e anos?"):
+    with st.expander("2. Desempenho acadêmico (IDA) - O desempenho acadêmico médio (IDA) está melhorando, estagnado ou caindo ao longo das fases e anos?"):
         st.markdown("""
         **Análise:** Acompanhamento do Desempenho Acadêmico Médio (IDA). À esquerda, a evolução global por ano. 
         À direita, o comportamento do IDA ao longo do avanço nas fases do programa.
@@ -255,7 +256,7 @@ with st.expander("2. Desempenho acadêmico (IDA) - O desempenho acadêmico médi
             fig2b.update_layout(yaxis=dict(range=[0, 10]), xaxis=dict(dtick=1), xaxis_title="Fase do Aluno (0 = Alfa)", yaxis_title="Nota Média (IDA)", legend_title="Ano")
             st.plotly_chart(fig2b, use_container_width=True)
 
-with st.expander("3. Engajamento nas atividades (IEG) - O grau de engajamento dos alunos (IEG) tem relação direta com seus indicadores de desempenho (IDA) e do ponto de virada (IPV)?"):
+    with st.expander("3. Engajamento nas atividades (IEG) - O grau de engajamento dos alunos (IEG) tem relação direta com seus indicadores de desempenho (IDA) e do ponto de virada (IPV)?"):
         st.markdown("""
         **Análise:** A análise de correlação entre o Engajamento (IEG), o Desempenho Acadêmico (IDA) e o Ponto de Virada (IPV) 
         revela que existe uma relação direta e positiva, embora a força dessa conexão varie entre os indicadores.
@@ -302,7 +303,7 @@ with st.expander("3. Engajamento nas atividades (IEG) - O grau de engajamento do
             fig_ieg_ipv.update_layout(xaxis_title="Engajamento (IEG)", yaxis_title="Ponto de Virada (IPV)")
             st.plotly_chart(fig_ieg_ipv, use_container_width=True)
 
-with st.expander("4. Autoavaliação (IAA) - As percepções dos alunos sobre si mesmos (IAA) são coerentes com seu desempenho real (IDA) e engajamento (IEG)?"):
+    with st.expander("4. Autoavaliação (IAA) - As percepções dos alunos sobre si mesmos (IAA) são coerentes com seu desempenho real (IDA) e engajamento (IEG)?"):
         st.markdown("""
         **Análise:** Comparamos a percepção do aluno sobre si mesmo (IAA) com seu desempenho real (IDA), 
         engajamento (IEG) e aspecto psicossocial (IPS). O gráfico demonstra a força do alinhamento entre a 
@@ -346,7 +347,7 @@ with st.expander("4. Autoavaliação (IAA) - As percepções dos alunos sobre si
         
         st.plotly_chart(fig4, use_container_width=True)
 
-with st.expander("5. Aspectos psicossociais (IPS) - Há padrões psicossociais (IPS) que antecedem quedas de desempenho acadêmico ou de engajamento?"):
+    with st.expander("5. Aspectos psicossociais (IPS) - Há padrões psicossociais (IPS) que antecedem quedas de desempenho acadêmico ou de engajamento?"):
         st.markdown("""
         **Análise:** Investigamos se há padrões psicossociais (IPS) que antecedem quedas de desempenho acadêmico (IDA) 
         ou de engajamento (IEG). A análise visual da dispersão e as linhas de tendência evidenciam uma relação 
@@ -393,7 +394,7 @@ with st.expander("5. Aspectos psicossociais (IPS) - Há padrões psicossociais (
             fig_ips_ieg.update_layout(xaxis_title="Indicador Psicossocial (IPS)", yaxis_title="Engajamento nas Atividades (IEG)")
             st.plotly_chart(fig_ips_ieg, use_container_width=True)
 
-with st.expander("6. Aspectos psicopedagógicos (IPP) - As avaliações psicopedagógicas (IPP) confirmam ou contradizem a defasagem identificada pelo IAN?"):
+    with st.expander("6. Aspectos psicopedagógicos (IPP) - As avaliações psicopedagógicas (IPP) confirmam ou contradizem a defasagem identificada pelo IAN?"):
         st.markdown("""
         **Análise:** As avaliações psicopedagógicas (IPP) são comparadas com os níveis de defasagem dos alunos 
         para entender se a avaliação profissional de desenvolvimento corrobora com o atraso acadêmico medido.
@@ -469,7 +470,7 @@ with st.expander("6. Aspectos psicopedagógicos (IPP) - As avaliações psicoped
         corr_ipp_ian = df_q6[['ipp', 'ian']].corr().iloc[0, 1]
         st.info(f"**A Prova Estatística:** A correlação exata entre o desenvolvimento psicopedagógico (IPP) e a adequação de nível (IAN) é de **{corr_ipp_ian:.3f}**.")
 
-with st.expander("7. Ponto de Virada (IPV) - Quais comportamentos - acadêmicos, emocionais ou de engajamento - mais influenciam o IPV ao longo do tempo?"):
+    with st.expander("7. Ponto de Virada (IPV) - Quais comportamentos - acadêmicos, emocionais ou de engajamento - mais influenciam o IPV ao longo do tempo?"):
         st.markdown("""
         **Análise:** Avaliamos quais comportamentos (acadêmicos, emocionais ou de engajamento) mais influenciam 
         o Ponto de Virada (IPV) de forma consolidada ao longo dos anos (2022 - 2024).
@@ -527,7 +528,7 @@ with st.expander("7. Ponto de Virada (IPV) - Quais comportamentos - acadêmicos,
         # Opcional: Tabela de apoio resumida
         st.dataframe(corr_geral.set_index('Indicador').sort_values(by='Correlação', ascending=False).round(3), use_container_width=True)
 
-with st.expander("8. Multidimensionalidade dos indicadores - Quais combinações de indicadores (IDA + IEG + IPS + IPP) elevam mais a nota global do aluno (INDE)?"):
+    with st.expander("8. Multidimensionalidade dos indicadores - Quais combinações de indicadores (IDA + IEG + IPS + IPP) elevam mais a nota global do aluno (INDE)?"):
         st.markdown("""
         **Análise:** Avaliamos como o acúmulo de pilares de destaque (alunos que ficam acima da mediana 
         em IDA, IEG, IPS e IPP simultaneamente) impacta diretamente na sua Nota Global (INDE).
@@ -604,13 +605,13 @@ with st.expander("8. Multidimensionalidade dos indicadores - Quais combinações
         else:
             st.warning("A coluna correspondente ao INDE não foi identificada automaticamente no conjunto de dados para gerar este gráfico.")
 
-with st.expander("9. Previsão de Risco com Machine Learning (Regressão Logística) - Quais padrões nos indicadores permitem identificar alunos em risco antes de queda no desempenho ou aumento da defasagem?"):
+    with st.expander("9. Previsão de Risco com Machine Learning (Regressão Logística) - Quais padrões nos indicadores permitem identificar alunos em risco antes de queda no desempenho ou aumento da defasagem?"):
         st.markdown("""
         **Análise:** Construímos um modelo preditivo baseado em **Regressão Logística** para identificar a probabilidade 
         de um aluno entrar em risco de defasagem (`Defasagem < 0`) com base em seus pilares (IDA, IEG, IPS, IAA, IPP).
         """)
                 
-# 1. Preparar cópia e limpar colunas (tudo em minúsculo)
+        # 1. Preparar cópia e limpar colunas (tudo em minúsculo)
         df_q9 = df.copy()
         df_q9.columns = [str(col).strip().lower() for col in df_q9.columns]
 
@@ -693,7 +694,8 @@ with st.expander("9. Previsão de Risco com Machine Learning (Regressão Logíst
         else:
             st.warning("As colunas necessárias para o modelo preditivo não foram encontradas.")
 
-with st.expander("10. Efetividade do Programa (Evolução por Fase 2022-2024)"):
+
+    with st.expander("10. Efetividade do Programa (Evolução por Fase 2022-2024)"):
         st.markdown("""
         **Análise:** Avaliamos o volume e a proporção de alunos em cada fase da jornada 
         (Quartzo, Ágata, Ametista e Topázio) ao longo dos ciclos de 2022 a 2024.
@@ -788,7 +790,6 @@ with st.expander("10. Efetividade do Programa (Evolução por Fase 2022-2024)"):
                 st.warning("As colunas foram encontradas, mas não há dados válidos de Quartzo, Ágata, Ametista ou Topázio registradas nelas.")
         else:
             st.warning("As colunas de pedras ('Pedra 22', 'Pedra 2023', 'Pedra 2024') não foram encontradas no conjunto de dados. Verifique a grafia exata na sua base.")
-
 
 
 # ==============================================================================
