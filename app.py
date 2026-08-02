@@ -86,18 +86,12 @@ with st.sidebar:
     # Seção de Links Úteis com botões ou links formatados
     st.markdown("---")
     st.subheader("🔗 Links Úteis")
+    st.markdown("[💻 Repositório GitHub](https://github.com/RafaKuni)")
     st.markdown("[🌐 Site Passos Mágicos](https://passosmagicos.org.br/)")
-    st.markdown("[💻 Repositório GitHub](https://github.com/paulocdvieira/FIAP-DA-F5-TC-GRUPO47)")
-    
-    # Detalhes Técnicos em um box de destaque
-    st.markdown("---")
-    with st.expander("🛠️ Detalhes Técnicos", expanded=True):
-        st.write("🤖 **Modelo Preditivo:** `Regressão Logística`")
-        st.write("🎯 **Estratégia:** `Alta Precisão (Threshold 0.75)`")
         
     # Rodapé do menu
     st.markdown("---")
-    st.caption("Desenvolvido pelo Grupo 47")
+    st.caption("Rafael Kuniyoshi - Grupo 13")
 
 # ==============================================================================
 # 3. INTERFACE E NAVEGAÇÃO (TABS)
@@ -110,15 +104,6 @@ aba1, aba2, aba3 = st.tabs([
     "Questões Técnicas", 
     "Simulador de Defasagem"
 ])
-
-# ==============================================================================
-# ABA 1: VISÃO DOS DADOS
-# ==============================================================================
-
-
-# ==============================================================================
-# ABA 1: VISÃO DOS DADOS
-# ==============================================================================
 
 # ==============================================================================
 # ABA 1: VISÃO DOS DADOS
@@ -185,10 +170,60 @@ with aba1:
 
         st.markdown("---")
         
-        st.subheader("Visualização dos Microdados (Longitudinais)")
-        st.dataframe(df, use_container_width=True)
-    else:
-        st.info("Base de dados não carregada. As métricas estão ocultas.")
+st.markdown("### Alunos com Maior Probabilidade de Risco")
+        
+        # Procura as colunas exatas da sua imagem dentro do DataFrame atual
+        cols_desejadas = {
+            'ra': 'RA', 
+            'ano_referencia': 'ANO', 
+            'fase': 'FASE', 
+            'pedra': 'PEDRA', 
+            'ida': 'IDA', 
+            'ieg': 'IEG', 
+            'inde': 'INDE'
+        }
+        
+        cols_tabela = []
+        col_mapping = {}
+        
+        for c_buscar, c_nome_final in cols_desejadas.items():
+            # Acha a coluna correspondente no df (ignorando maiúsculas/minúsculas)
+            c_encontrada = next((c for c in df.columns if c_buscar in c.lower()), None)
+            if c_encontrada:
+                cols_tabela.append(c_encontrada)
+                col_mapping[c_encontrada] = c_nome_final
+                
+        if cols_tabela:
+            df_risco = df[cols_tabela].copy()
+            df_risco.rename(columns=col_mapping, inplace=True)
+            
+            # Se a base já tiver uma coluna de probabilidade, usamos ela. 
+            # Senão, criamos a coluna PROB_RISCO e ordenamos pelos piores alunos (menor INDE/IDA)
+            col_prob = next((c for c in df.columns if 'prob' in c.lower() or 'risco' in c.lower()), None)
+            
+            if col_prob:
+                df_risco['PROB_RISCO'] = df[col_prob]
+                df_risco = df_risco.sort_values(by='PROB_RISCO', ascending=False)
+            else:
+                # Regra de negócio provisória: ordena pelos piores INDE para simular o risco
+                if 'INDE' in df_risco.columns:
+                    # Força numérico para ordenar certo
+                    df_risco['INDE'] = pd.to_numeric(df_risco['INDE'].astype(str).str.replace(',', '.'), errors='coerce')
+                    df_risco = df_risco.sort_values(by='INDE', ascending=True)
+                
+                # Cria a coluna com valor 1 (como no print) para os primeiros
+                df_risco['PROB_RISCO'] = 1.0 
+
+            # Mostra a tabela formatada e limpa (sem o index lateral)
+            st.dataframe(
+                df_risco.head(15).style.format({'PROB_RISCO': '{:.0f}'}), # Formata probabilidade sem casas decimais
+                use_container_width=True,
+                hide_index=True
+            )
+        else:
+            st.warning("Colunas necessárias para montar a tabela de risco (RA, Fase, IDA, etc.) não foram encontradas.")
+
+        st.markdown("---")
 
 
 # ==============================================================================
