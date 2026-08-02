@@ -116,27 +116,74 @@ aba1, aba2, aba3 = st.tabs([
 # ==============================================================================
 
 
+# ==============================================================================
+# ABA 1: VISÃO DOS DADOS
+# ==============================================================================
+
 with aba1:
-    st.header("Análise Geral da Base de Modelagem")
+    # Cabeçalho idêntico ao do seu print
+    st.markdown("<h1>Passos Mágicos - Monitoramento de Risco de Defasagem</h1>", unsafe_allow_html=True)
+    st.markdown("Esta plataforma analisa o desenvolvimento educacional dos alunos da **Associação Passos Mágicos** utilizando dados do PEDE (2022-2024) e um modelo preditivo de risco de defasagem baseado em Machine Learning.")
+    
+    st.markdown("### Indicadores Gerais")
     
     if not df.empty:
-        # 1. Métricas Principais
+        # 1. Total de Alunos
+        total_alunos = len(df)
+        
+        # 2. Em Risco de Defasagem (Defasagem < 0)
+        if 'defasagem' in df.columns:
+            # Tratamento rápido para garantir que é numérico
+            temp_defasagem = pd.to_numeric(df['defasagem'].astype(str).str.replace(',', '.'), errors='coerce')
+            risco_count = len(temp_defasagem[temp_defasagem < 0])
+        else:
+            risco_count = 0
+            
+        risco_pct = (risco_count / total_alunos * 100) if total_alunos > 0 else 0
+        
+        # 3. Alunos Topázio
+        if 'pedra' in df.columns:
+            topazio_count = len(df[df['pedra'].astype(str).str.upper().str.contains('TOPAZIO|TOPÁZIO', na=False)])
+        elif 'fase' in df.columns:
+            topazio_count = len(df[df['fase'].astype(str).str.upper().str.contains('TOPAZIO|TOPÁZIO', na=False)])
+        else:
+            topazio_count = 0
+            
+        topazio_pct = (topazio_count / total_alunos * 100) if total_alunos > 0 else 0
+        
+        # 4. Anos Analisados
+        if 'ano_referencia' in df.columns:
+            anos_unicos = df['ano_referencia'].dropna().unique()
+            qtd_anos = len(anos_unicos)
+            min_ano = int(min(anos_unicos))
+            max_ano = int(max(anos_unicos))
+            texto_anos = f"{qtd_anos} ({min_ano}-{max_ano})"
+        else:
+            texto_anos = "3 (2022-2024)"
+
+        # Criando as 4 colunas para as métricas
         m1, m2, m3, m4 = st.columns(4)
         
-        tempo_medio = df['Tempo_Programa'].mean() if 'Tempo_Programa' in df.columns else 0
-        inde_medio = df['INDE'].mean() if 'INDE' in df.columns else 0
-
-        with m1: st.metric("Registros Aluno-Ano", len(df))
-        with m2: st.metric("Tempo Médio no Programa", f"{tempo_medio:.1f} anos")
-        with m3: st.metric("Média Geral INDE", f"{inde_medio:.2f}")
-        with m4: st.metric("Taxa de Risco Real", f"{(df['Target_Defasagem_Ano_Seguinte'].mean()*100):.1f}%" if 'Target_Defasagem_Ano_Seguinte' in df.columns else "N/A")
+        with m1: 
+            st.metric("Total de Alunos", f"{total_alunos:,}")
+            
+        with m2: 
+            # O delta_color="inverse" deixa vermelho quando sobe (risco aumentando)
+            st.metric("Em Risco de Defasagem", f"{risco_count:,}", delta=f"{risco_pct:.1f}% do total", delta_color="inverse")
+            
+        with m3: 
+            # O delta_color="normal" deixa verde quando sobe (bom indicador)
+            st.metric("Alunos Topázio", f"{topazio_count:,}", delta=f"{topazio_pct:.1f}% do total", delta_color="normal")
+            
+        with m4: 
+            st.metric("Anos Analisados", texto_anos)
 
         st.markdown("---")
         
         st.subheader("Visualização dos Microdados (Longitudinais)")
         st.dataframe(df, use_container_width=True)
     else:
-        st.info("Base de dados 'base_modelagem.csv' não carregada. As métricas estão ocultas.")
+        st.info("Base de dados 'PEDE_Consolidado_2022_2024.csv' não carregada. As métricas estão ocultas.")
 
 
 # ==============================================================================
