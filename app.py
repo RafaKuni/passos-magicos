@@ -85,9 +85,7 @@ with st.sidebar:
     
     # Seção de Links Úteis com botões ou links formatados
     st.markdown("---")
-    st.subheader("🔗 Links Úteis")
-    st.markdown("[💻 Repositório GitHub](https://github.com/RafaKuni)")
-    st.markdown("[🌐 Site Passos Mágicos](https://passosmagicos.org.br/)")
+    st.markdown("[💻 Repositório GitHub](https://github.com/RafaKuni/passos-magicos)")
         
     # Rodapé do menu
     st.markdown("---")
