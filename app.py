@@ -946,5 +946,3 @@ with aba3:
                 st.error(f"Erro ao gerar predição. Verifique se os dados estão no formato correto. Detalhe: {e}")
 
 st.caption("Associação Passos Mágicos | Datathon F5 FIAP Data Analytics")
-
-st.caption("Associação Passos Mágicos | Datathon F5 FIAP Data Analytics")
