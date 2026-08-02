@@ -120,8 +120,11 @@ aba1, aba2, aba3 = st.tabs([
 # ABA 1: VISÃO DOS DADOS
 # ==============================================================================
 
+# ==============================================================================
+# ABA 1: VISÃO DOS DADOS
+# ==============================================================================
+
 with aba1:
-    # Cabeçalho idêntico ao do seu print
     st.markdown("<h1>Passos Mágicos - Monitoramento de Risco de Defasagem</h1>", unsafe_allow_html=True)
     st.markdown("Esta plataforma analisa o desenvolvimento educacional dos alunos da **Associação Passos Mágicos** utilizando dados do PEDE (2022-2024) e um modelo preditivo de risco de defasagem baseado em Machine Learning.")
     
@@ -131,48 +134,50 @@ with aba1:
         # 1. Total de Alunos
         total_alunos = len(df)
         
-        # 2. Em Risco de Defasagem (Defasagem < 0)
+        # 2. Em Risco de Defasagem
         if 'defasagem' in df.columns:
-            # Tratamento rápido para garantir que é numérico
             temp_defasagem = pd.to_numeric(df['defasagem'].astype(str).str.replace(',', '.'), errors='coerce')
+            
+            # ATENÇÃO AQUI: Se quiser chegar no número ~758 da sua imagem de referência, 
+            # altere a regra abaixo. Ex: temp_defasagem <= -2 (Apenas Moderada e Severa)
             risco_count = len(temp_defasagem[temp_defasagem < 0])
         else:
             risco_count = 0
             
         risco_pct = (risco_count / total_alunos * 100) if total_alunos > 0 else 0
         
-        # 3. Alunos Topázio
-        if 'pedra' in df.columns:
-            topazio_count = len(df[df['pedra'].astype(str).str.upper().str.contains('TOPAZIO|TOPÁZIO', na=False)])
-        elif 'fase' in df.columns:
-            topazio_count = len(df[df['fase'].astype(str).str.upper().str.contains('TOPAZIO|TOPÁZIO', na=False)])
+        # 3. Alunos Topázio (Busca Robusta)
+        # Varre TODAS as colunas que tenham 'pedra' ou 'fase' no nome para não deixar ninguém de fora
+        cols_busca = [c for c in df.columns if 'pedra' in c or 'fase' in c]
+        if cols_busca:
+            mascara_topazio = df[cols_busca].astype(str).apply(
+                lambda col: col.str.upper().str.contains('TOPAZIO|TOPÁZIO')
+            ).any(axis=1)
+            topazio_count = mascara_topazio.sum()
         else:
             topazio_count = 0
             
         topazio_pct = (topazio_count / total_alunos * 100) if total_alunos > 0 else 0
         
-        # 4. Anos Analisados
+        # 4. Anos Analisados (Texto mais curto para não cortar no layout)
         if 'ano_referencia' in df.columns:
             anos_unicos = df['ano_referencia'].dropna().unique()
-            qtd_anos = len(anos_unicos)
             min_ano = int(min(anos_unicos))
             max_ano = int(max(anos_unicos))
-            texto_anos = f"{qtd_anos} ({min_ano}-{max_ano})"
+            texto_anos = f"{min_ano} a {max_ano}" # Fica mais limpo: "2022 a 2024"
         else:
-            texto_anos = "3 (2022-2024)"
+            texto_anos = "2022 a 2024"
 
-        # Criando as 4 colunas para as métricas
+        # Criando as 4 colunas
         m1, m2, m3, m4 = st.columns(4)
         
         with m1: 
             st.metric("Total de Alunos", f"{total_alunos:,}")
             
         with m2: 
-            # O delta_color="inverse" deixa vermelho quando sobe (risco aumentando)
             st.metric("Em Risco de Defasagem", f"{risco_count:,}", delta=f"{risco_pct:.1f}% do total", delta_color="inverse")
             
         with m3: 
-            # O delta_color="normal" deixa verde quando sobe (bom indicador)
             st.metric("Alunos Topázio", f"{topazio_count:,}", delta=f"{topazio_pct:.1f}% do total", delta_color="normal")
             
         with m4: 
@@ -183,7 +188,7 @@ with aba1:
         st.subheader("Visualização dos Microdados (Longitudinais)")
         st.dataframe(df, use_container_width=True)
     else:
-        st.info("Base de dados 'PEDE_Consolidado_2022_2024.csv' não carregada. As métricas estão ocultas.")
+        st.info("Base de dados não carregada. As métricas estão ocultas.")
 
 
 # ==============================================================================
