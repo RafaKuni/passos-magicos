@@ -170,7 +170,7 @@ with aba1:
 
         st.markdown("---")
         
-st.markdown("### Alunos com Maior Probabilidade de Risco")
+        st.markdown("### Alunos com Maior Probabilidade de Risco")
         
         # Procura as colunas exatas
         cols_desejadas = {
