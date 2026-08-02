@@ -797,7 +797,7 @@ with aba2:
             st.warning("As colunas necessárias para o modelo preditivo não foram encontradas.")
 
 
-    with st.expander("10. Efetividade do Programa (Evolução por Fase 2022-2024)"):
+    with st.expander("10. Efetividade do programa - Os indicadores mostram melhora consistente ao longo do ciclo nas diferentes fases (Quartzo, Ágata, Ametista e Topázio), confirmando o impacto real do programa?"):
         st.markdown("""
         **Análise:** Avaliamos o volume e a proporção de alunos em cada fase da jornada 
         (Quartzo, Ágata, Ametista e Topázio) ao longo dos ciclos de 2022 a 2024.
