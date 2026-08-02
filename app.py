@@ -105,10 +105,9 @@ with st.sidebar:
 
 st.title("Datathon - Associação Passos Mágicos")
 
-aba1, aba2, aba3, aba4 = st.tabs([
+aba1, aba2, aba3 = st.tabs([
     "Visão dos Dados", 
     "Questões Técnicas", 
-    "Performance do Modelo Preditivo", 
     "Simulador de Defasagem"
 ])
 
@@ -791,79 +790,11 @@ with st.expander("10. Efetividade do Programa (Evolução por Fase 2022-2024)"):
             st.warning("As colunas de pedras ('Pedra 22', 'Pedra 2023', 'Pedra 2024') não foram encontradas no conjunto de dados. Verifique a grafia exata na sua base.")
 
 
-with st.expander("11. Insights e criatividade"):
-        st.markdown("**Análise:** Matriz estratégica cruza o Engajamento (IEG) com o Desempenho (IDA) para classificar os alunos em quadrantes comportamentais.")
-        mediana_ida = df['ida'].median()
-        mediana_ieg = df['ieg'].median()
-
-        fig11 = px.scatter(df, x='ieg', y='ida', color='pedra', hover_data=['ano_referencia', 'fase'], opacity=0.6, title="Matriz de Desempenho vs. Engajamento", category_orders={'pedra': ['Quartzo', 'Agata', 'Ametista', 'Topazio']})
-        fig11.add_hline(y=mediana_ida, line_dash="dash", line_color="black", opacity=0.5)
-        fig11.add_vline(x=mediana_ieg, line_dash="dash", line_color="black", opacity=0.5)
-        
-        fig11.add_annotation(x=9, y=9, text="PROTAGONISTAS", showarrow=False, font=dict(color="green", size=14, weight="bold"))
-        fig11.add_annotation(x=1, y=9, text="TALENTOS DESMOTIVADOS", showarrow=False, font=dict(color="orange", size=14, weight="bold"))
-        fig11.add_annotation(x=9, y=1, text="RISCO DE FRUSTRAÇÃO", showarrow=False, font=dict(color="red", size=14, weight="bold"))
-        fig11.add_annotation(x=1, y=1, text="ZONA DE ALERTA", showarrow=False, font=dict(color="darkred", size=14, weight="bold"))
-        
-        fig11.update_layout(xaxis_title="Engajamento (IEG)", yaxis_title="Desempenho Acadêmico (IDA)", xaxis=dict(range=[0, 10.5]), yaxis=dict(range=[0, 10.5]), legend_title="Fase (Pedra)")
-        st.plotly_chart(fig11, use_container_width=True)
-        
-        esforcados = df[(df['ieg'] > mediana_ieg) & (df['ida'] < mediana_ida)]
-        st.info(f"🚩 **Foco Pedagógico:** Identificamos **{len(esforcados)}** alunos no quadrante 'Risco de Frustração'.")
 
 # ==============================================================================
-# ABA 3: PERFORMANCE DO MODELO (Atualizado com os nossos números reais)
+# ABA 3: SIMULADOR (Com as features do nosso modelo)
 # ==============================================================================
 with aba3:
-    st.header("📈 Performance do Modelo Preditivo - Regressão Logística")
-    
-    col_m1, col_m2, col_m3, col_m4 = st.columns(4)
-    col_m1.metric("AUC-ROC Geral", "0.8993")
-    col_m2.metric("Acurácia", "88.00%")
-    col_m3.metric("Precision (Threshold 0.75)", "0.33") # Refletindo a otimização
-    col_m4.metric("Recall (Alunos Salvos)", "0.64")
-
-    st.markdown("---")
-    c1, c2 = st.columns(2)
-    
-    with c1:
-        st.subheader("Matriz de Confusão (%) - Ajustada")
-        # Baseado no seu último print de avaliação
-        z = [[90.0, 10.0], [36.0, 64.0]] 
-        fig_conf = ff.create_annotated_heatmap(
-            z, 
-            x=['Prev: Estável', 'Prev: Risco'], 
-            y=['Real: Estável', 'Real: Risco'], 
-            colorscale='Blues', 
-            showscale=True
-        )
-        st.plotly_chart(fig_conf, use_container_width=True)
-
-    with c2:
-        st.subheader("Curva ROC")
-        fpr = np.linspace(0, 1, 100)
-        tpr = fpr ** (1/8) # Simulação visual para AUC ~0.90
-        fig_roc = go.Figure()
-        fig_roc.add_trace(go.Scatter(x=fpr, y=tpr, name='Regressão Logística (AUC=0.90)', line=dict(color='darkorange', width=2)))
-        fig_roc.add_trace(go.Scatter(x=[0, 1], y=[0, 1], line=dict(dash='dash', color='gray'), name='Aleatório'))
-        fig_roc.update_layout(xaxis_title='Taxa de Falsos Positivos (FPR)', yaxis_title='Taxa de Verdadeiros Positivos (TPR)')
-        st.plotly_chart(fig_roc, use_container_width=True)
-
-    st.subheader("Importância dos Atributos (Estimativa Logística)")
-    f_imp = pd.DataFrame({
-        'Atributo': ['Delta_IDA', 'Delta_INDE', 'Tempo_Programa', 'IDA', 'IEG', 'IPP'], 
-        'Relevância': [0.35, 0.28, 0.15, 0.10, 0.07, 0.05]
-    }).sort_values('Relevância', ascending=True)
-    
-    st.plotly_chart(px.bar(
-        f_imp, x='Relevância', y='Atributo', orientation='h', 
-        color_discrete_sequence=['#2E8B57']
-    ), use_container_width=True)
-
-# ==============================================================================
-# ABA 4: SIMULADOR (Com as features do nosso modelo)
-# ==============================================================================
-with aba4:
     st.header("🔮 Simulador de Risco de Defasagem (Ano Seguinte)")
     
     st.markdown("Insira os dados atuais do aluno e a variação ($\Delta$) em relação ao ano passado para prever a probabilidade de entrar em defasagem severa no próximo ano.")
