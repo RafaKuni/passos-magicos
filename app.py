@@ -110,7 +110,6 @@ aba1, aba2, aba3 = st.tabs([
 # ==============================================================================
 
 with aba1:
-    st.markdown("<h1>Passos Mágicos - Monitoramento de Risco de Defasagem</h1>", unsafe_allow_html=True)
     st.markdown("Esta plataforma analisa o desenvolvimento educacional dos alunos da **Associação Passos Mágicos** utilizando dados do PEDE (2022-2024) e um modelo preditivo de risco de defasagem baseado em Machine Learning.")
     
     st.markdown("### Indicadores Gerais")
