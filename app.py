@@ -694,18 +694,89 @@ with st.expander("9. Previsão de Risco com Machine Learning (Regressão Logíst
         else:
             st.warning("As colunas necessárias para o modelo preditivo não foram encontradas.")
 
-with st.expander("10. Efetividade do programa"):
-        st.markdown("**Análise:** A efetividade do programa é medida pela evolução conjunta dos indicadores à medida que o aluno progride entre as fases (Pedras).")
-        fases_presentes = [f for f in ['Quartzo', 'Agata', 'Ametista', 'Topazio'] if f in df['pedra'].unique()]
-        df_efetividade = df[df['pedra'].isin(fases_presentes)]
-        df_medias = df_efetividade.groupby('pedra')[['inde_ano', 'ida', 'ieg', 'ipv', 'ipp']].mean().reindex(fases_presentes).reset_index()
+with st.expander("10. Efetividade do Programa (Evolução por Fase 2022-2024)"):
+        st.markdown("""
+        **Análise:** Avaliamos o volume e a proporção de alunos em cada fase da jornada 
+        (Quartzo, Ágata, Ametista e Topázio) ao longo dos ciclos de 2022 a 2024.
+        """)
 
-        fig10 = go.Figure()
-        for col in ['inde_ano', 'ida', 'ieg', 'ipv', 'ipp']:
-            fig10.add_trace(go.Scatter(x=df_medias['pedra'], y=df_medias[col], mode='lines+markers+text', name=col.upper(), line=dict(width=3), marker=dict(size=8), text=[f"{val:.2f}" if i == len(df_medias)-1 else "" for i, val in enumerate(df_medias[col])], textposition="top center", textfont=dict(weight='bold')))
-        fig10.update_layout(title="Efetividade: Evolução dos Indicadores por Fase", xaxis_title="Fases (Pedra)", yaxis_title="Média dos Indicadores", yaxis=dict(range=[0, 10.5]), hovermode="x unified")
-        st.plotly_chart(fig10, use_container_width=True)
+        # 1. Mapeamento e unificação dos dados
+        map_22 = {'Pedra 22': 'Pedra'}
+        map_23 = {'Pedra 2023': 'Pedra'}
+        map_24 = {'Pedra 2024': 'Pedra'}
 
+        # Tenta utilizar dataframes separados se existirem, senão busca no df principal
+        df_22_temp = df_2022 if 'df_2022' in locals() else df.copy()
+        df_23_temp = df_2023 if 'df_2023' in locals() else df.copy()
+        df_24_temp = df_2024 if 'df_2024' in locals() else df.copy()
+
+        df_22 = df_22_temp[[c for c in map_22.keys() if c in df_22_temp.columns]].rename(columns=map_22)
+        df_22['Ano'] = '2022'
+        
+        df_23 = df_23_temp[[c for c in map_23.keys() if c in df_23_temp.columns]].rename(columns=map_23)
+        df_23['Ano'] = '2023'
+        
+        df_24 = df_24_temp[[c for c in map_24.keys() if c in df_24_temp.columns]].rename(columns=map_24)
+        df_24['Ano'] = '2024'
+
+        df_pedras = pd.concat([df_22, df_23, df_24], ignore_index=True)
+
+        if not df_pedras['Pedra'].dropna().empty:
+            # 2. Limpeza e padronização dos nomes das pedras
+            df_pedras = df_pedras.dropna(subset=['Pedra'])
+            df_pedras['Pedra'] = df_pedras['Pedra'].astype(str).str.upper().str.replace('Á', 'A').str.strip()
+
+            pedras_oficiais = ['QUARTZO', 'AGATA', 'AMETISTA', 'TOPAZIO']
+            df_pedras = df_pedras[df_pedras['Pedra'].isin(pedras_oficiais)]
+
+            # 3. Cálculo das contagens absolutas e proporções
+            contagem = df_pedras.groupby(['Ano', 'Pedra']).size().unstack(fill_value=0)
+            
+            # Garantir que todas as pedras oficiais existam na tabela, mesmo que zeradas
+            for p in pedras_oficiais:
+                if p not in contagem.columns:
+                    contagem[p] = 0
+                    
+            contagem = contagem[pedras_oficiais] # Garantir a ordem correta
+            proporcoes = contagem.div(contagem.sum(axis=1), axis=0)
+
+            # 4. Criação do Gráfico 100% Empilhado com Plotly
+            fig10 = go.Figure()
+            cores = ['#d9d9d9', '#90be6d', '#2d6a4f', '#f9e58f']
+
+            for i, pilar in enumerate(pedras_oficiais):
+                # Usamos a proporção para o tamanho da barra (Y), mas o texto é a contagem absoluta
+                textos_barras = [str(val) if val > 0 else "" for val in contagem[pilar]]
+                
+                fig10.add_trace(go.Bar(
+                    name=pilar.title(),
+                    x=proporcoes.index,
+                    y=proporcoes[pilar],
+                    text=textos_barras,
+                    textposition='inside',
+                    insidetextfont=dict(color='white' if i != 0 else 'black', size=14, family='Arial Black'), # Preto no Quartzo por causa do cinza claro
+                    marker_color=cores[i],
+                    marker_line=dict(color='white', width=1.5)
+                ))
+
+            fig10.update_layout(
+                barmode='stack',
+                title="Evolução do Volume de Alunos por Fase (2022 - 2024)",
+                xaxis_title="Ano",
+                yaxis_title="Proporção",
+                yaxis_tickformat='.0%',
+                legend_title="Fase (Pedra)",
+                legend=dict(traceorder='reversed') # Para bater com a ordem visual da pilha
+            )
+
+            st.plotly_chart(fig10, use_container_width=True)
+            
+            # Tabela de Apoio
+            st.markdown("##### 📋 Resumo: Volume Absoluto de Alunos")
+            st.dataframe(contagem.style.background_gradient(cmap='Greens', axis=None), use_container_width=True)
+
+        else:
+            st.warning("As colunas referentes às fases/pedras (Pedra 22, Pedra 2023, Pedra 2024) não foram encontradas ou estão vazias.")
 with st.expander("11. Insights e criatividade"):
         st.markdown("**Análise:** Matriz estratégica cruza o Engajamento (IEG) com o Desempenho (IDA) para classificar os alunos em quadrantes comportamentais.")
         mediana_ida = df['ida'].median()
