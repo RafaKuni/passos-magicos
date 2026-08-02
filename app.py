@@ -894,10 +894,13 @@ with aba2:
 # ==============================================================================
 # ABA 3: SIMULADOR (Com as features do nosso modelo)
 # ==============================================================================
+# ==============================================================================
+# ABA 3: SIMULADOR (Com as features do nosso modelo)
+# ==============================================================================
 with aba3:
     st.header("🔮 Simulador de Risco de Defasagem (Ano Seguinte)")
     
-    st.markdown("Insira os dados atuais do aluno e a variação ($\Delta$) em relação ao ano passado para prever a probabilidade de entrar em defasagem severa no próximo ano.")
+    st.markdown("Insira os dados atuais do aluno para prever a probabilidade de entrar em defasagem severa no próximo ano.")
     
     with st.form("sim"):
         c1, c2, c3 = st.columns(3)
@@ -906,11 +909,6 @@ with aba3:
             st.markdown("**Perfil e Histórico**")
             fase = st.number_input("Fase (Numérico)", 0.0, 10.0, 1.0, step=1.0)
             tempo_prog = st.number_input("Tempo de Programa (Anos)", 1, 10, 2)
-            
-            st.markdown("**Variações Ano a Ano (Deltas)**")
-            delta_ida = st.number_input("Variação IDA (Delta)", -10.0, 10.0, 0.0, step=0.1)
-            delta_ieg = st.number_input("Variação IEG (Delta)", -10.0, 10.0, 0.0, step=0.1)
-            delta_inde = st.number_input("Variação INDE (Delta)", -10.0, 10.0, 0.0, step=0.1)
 
         with c2:
             st.markdown("**Indicadores Principais**")
@@ -927,20 +925,18 @@ with aba3:
             ipv = st.slider("IPV Atual", 0.0, 10.0, 7.0, step=0.1)
 
         if st.form_submit_button("ANALISAR RISCO"):
-            # O DataFrame de input deve conter exatamente os mesmos nomes usados no treino
+            # IMPORTANTE: Removi os deltas daqui. Garanta que esses nomes 
+            # batem exatamente com as colunas usadas no treino do seu .pkl!
             in_df = pd.DataFrame({
                 'INDE': [inde], 'IAN': [ian], 'IDA': [ida], 'IEG': [ieg], 
                 'IAA': [iaa], 'IPS': [ips], 'IPP': [ipp], 'IPV': [ipv], 
-                'Fase': [fase], 'Tempo_Programa': [tempo_prog], 
-                'Delta_IDA': [delta_ida], 'Delta_IEG': [delta_ieg], 'Delta_INDE': [delta_inde]
+                'Fase': [fase], 'Tempo_Programa': [tempo_prog]
             })
             
             try:
-                # Pegando a probabilidade da classe 1 (Risco)
                 prob = modelo.predict_proba(in_df)[0][1]
                 st.metric("Probabilidade de Risco", f"{prob*100:.1f}%")
                 
-                # Aplicando o nosso Threshold super restrito de 0.75 para alta precisão
                 if prob >= 0.75: 
                     st.error("🚨 ALTO RISCO (Intervenção Necessária)")
                 else: 
