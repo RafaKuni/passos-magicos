@@ -223,12 +223,6 @@ with aba1:
         else:
             st.warning("Colunas necessárias para montar a tabela de risco (RA, Fase, IDA, etc.) não foram encontradas.")
         
-        st.markdown("---")
-
-        st.subheader("Visualização dos Microdados (Longitudinais)")
-        st.dataframe(df, use_container_width=True)
-    else:
-        st.info("Base de dados 'PEDE_Consolidado_2022_2024.csv' não carregada. As métricas estão ocultas.")
 
 # ==============================================================================
 # ABA 2: QUESTÕES TÉCNICAS
