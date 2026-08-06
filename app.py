@@ -309,8 +309,7 @@ with aba2:
 
     with st.expander("2. Desempenho acadêmico (IDA) - O desempenho acadêmico médio (IDA) está melhorando, estagnado ou caindo ao longo das fases e anos?"):
         st.markdown("""
-        **Análise:** Acompanhamento do Desempenho Acadêmico Médio (IDA). À esquerda, a evolução global por ano. 
-        À direita, o comportamento do IDA ao longo do avanço nas fases do programa.
+        **Análise:** O desempenho acadêmico médio apresentou melhora entre 2022 e 2023, com leve acomodação em 2024, mantendo-se, ainda assim, acima do patamar inicial. Ao observar o IDA ao longo das fases, identifica-se um padrão relevante: o desempenho tende a cair nas fases intermediárias do programa e se recupera nas fases finais, configurando uma curva em "U". Esse comportamento indica que o ponto de maior fragilidade acadêmica não está na entrada nem na conclusão da jornada do aluno, mas no seu trecho intermediário, reforçando a importância de direcionar reforço pedagógico específico para essas fases, de modo a sustentar a trajetória de desenvolvimento até os estágios finais.
         """)
         
         # 1. Regra de negócio: Extrair número da fase
@@ -357,8 +356,7 @@ with aba2:
 
     with st.expander("3. Engajamento nas atividades (IEG) - O grau de engajamento dos alunos (IEG) tem relação direta com seus indicadores de desempenho (IDA) e do ponto de virada (IPV)?"):
         st.markdown("""
-        **Análise:** A análise de correlação entre o Engajamento (IEG), o Desempenho Acadêmico (IDA) e o Ponto de Virada (IPV) 
-        revela que existe uma relação direta e positiva, embora a força dessa conexão varie entre os indicadores.
+        **Análise:** A análise de correlação evidencia uma relação direta e positiva entre o Engajamento (IEG) e os demais indicadores avaliados, com força moderada em ambos os casos (r = 0,54 para o Desempenho Acadêmico e r = 0,56 para o Ponto de Virada). Esses resultados indicam que o engajamento nas atividades, embora não seja o único fator determinante, está consistentemente associado a melhores resultados tanto no aprendizado quanto na trajetória de transformação pessoal do aluno. Do ponto de vista estratégico, o engajamento representa uma alavanca de intervenção especialmente relevante, por ser um indicador mais suscetível a ações pedagógicas de curto prazo do que o desempenho acadêmico isoladamente — reforçando a importância de iniciativas voltadas à participação ativa dos alunos como parte da estratégia de desenvolvimento educacional da Associação.
         """)
 
         # Garantir que os dados são numéricos (tratando possíveis vírgulas)
