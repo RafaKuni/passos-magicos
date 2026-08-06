@@ -444,9 +444,7 @@ with aba2:
 
     with st.expander("5. Aspectos psicossociais (IPS) - Há padrões psicossociais (IPS) que antecedem quedas de desempenho acadêmico ou de engajamento?"):
         st.markdown("""
-        **Análise:** Investigamos se há padrões psicossociais (IPS) que antecedem quedas de desempenho acadêmico (IDA) 
-        ou de engajamento (IEG). A análise visual da dispersão e as linhas de tendência evidenciam uma relação 
-        praticamente independente entre esses pilares.
+        **Análise:** A análise de correlação entre o Indicador Psicossocial (IPS) e os pilares de Desempenho Acadêmico (IDA) e Engajamento (IEG) demonstra uma relação praticamente nula em ambos os casos, evidenciada pelas linhas de tendência com inclinação próxima de zero. Esse resultado indica que o bem estar psicossocial do aluno, isoladamente, não funciona como fator preditivo de queda ou avanço nos indicadores acadêmicos ou de engajamento. Tal achado reforça a necessidade de tratar o IPS como uma dimensão complementar do desenvolvimento do aluno, cuja relevância se manifesta de forma combinada com os demais indicadores, e não como preditor isolado de risco.
         """)
         
         # 1. Preparar os dados garantindo as colunas em minúsculo e tratando as vírgulas
