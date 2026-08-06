@@ -402,9 +402,7 @@ with aba2:
 
     with st.expander("4. Autoavaliação (IAA) - As percepções dos alunos sobre si mesmos (IAA) são coerentes com seu desempenho real (IDA) e engajamento (IEG)?"):
         st.markdown("""
-        **Análise:** Comparamos a percepção do aluno sobre si mesmo (IAA) com seu desempenho real (IDA), 
-        engajamento (IEG) e aspecto psicossocial (IPS). O gráfico demonstra a força do alinhamento entre a 
-        autoavaliação e os demais pilares da jornada.
+        **Análise:** As correlações entre a Autoavaliação (IAA) e os demais indicadores  (Desempenho Acadêmico (r = 0,115), Engajamento (r = 0,133) e Aspecto Psicossocial (r = 0,157)) são todas fracas, indicando baixo alinhamento entre a percepção que o aluno tem de si mesmo e os resultados objetivos capturados pelos demais pilares da jornada. Esse descolamento sugere que a autopercepção do aluno não deve ser utilizada isoladamente como proxy de seu desenvolvimento real, sendo recomendável tratá-la como uma dimensão complementar e não substituta dos indicadores de desempenho, engajamento e bem-estar psicossocial. Do ponto de vista pedagógico, esse resultado também aponta para uma oportunidade: trabalhar a autopercepção do aluno pode ser tão relevante quanto atuar diretamente sobre indicadores objetivos, especialmente em casos de subestimação ou superestimação da própria trajetória.
         """)
         
         # 1. Preparar os dados garantindo as colunas em minúsculo (padrão do app)
