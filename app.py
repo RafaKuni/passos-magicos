@@ -565,8 +565,7 @@ with aba2:
 
     with st.expander("7. Ponto de Virada (IPV) - Quais comportamentos - acadêmicos, emocionais ou de engajamento - mais influenciam o IPV ao longo do tempo?"):
         st.markdown("""
-        **Análise:** Avaliamos quais comportamentos (acadêmicos, emocionais ou de engajamento) mais influenciam 
-        o Ponto de Virada (IPV) de forma consolidada ao longo dos anos (2022 - 2024).
+        **Análise:** A avaliação psicopedagógica média apresenta redução consistente conforme o nível de defasagem se aprofunda, passando de 7,68 pontos entre os alunos classificados como Em Fase para 7,01 pontos entre os alunos em Defasagem Severa. Esse comportamento confirma qualitativamente a direção indicada pelo IAN. Contudo, a magnitude da variação é relativamente pequena diante da amplitude dos grupos analisados, e a distribuição das notas apresenta sobreposição relevante entre as categorias, o que sugere que o IPP capta uma dimensão complementar do desenvolvimento do aluno, e não uma simples reprodução do indicador de adequação de nível.
         """)
 
         # 1. Preparar os dados (garantindo conversão e minúsculas para o app)
