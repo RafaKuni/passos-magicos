@@ -247,8 +247,8 @@ with aba2:
 
     with st.expander("1. Adequação do nível (IAN) - Qual é o perfil geral de defasagem dos alunos (IAN) e como ele evolui ao longo do ano?"):
         st.markdown("""
-        **Análise:** O perfil de defasagem dos alunos demonstra a trajetória de recuperação acadêmica 
-        em números absolutos ao longo dos anos, separada em quatro níveis de atenção.
+        **Análise:** O perfil de defasagem dos alunos apresenta uma evolução consistentemente positiva entre 2022 e 2024. A proporção de alunos classificados como "Em Fase" praticamente dobrou no período, 
+        ao passo que os casos de defasagem moderada e severa foram reduzidos de forma expressiva; a defasagem severa, em particular, caiu de 28 para apenas 3 alunos. Esses resultados sugerem que as intervenções pedagógicas têm sido eficazes na correção de trajetórias de aprendizagem. Ainda assim, a defasagem leve permanece como o maior bloco de atenção, praticamente estagnada ao longo dos três ciclos, o que indica a necessidade de estratégias específicas para evitar que esse grupo avance para níveis mais críticos.
         """)
         
         df_q1 = df.copy()
