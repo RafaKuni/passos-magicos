@@ -64,6 +64,8 @@ if 'inde_ano' not in df.columns:
 df_ml = pd.read_csv("base_modelagem.csv", sep=";") # Mantemos a leitura do modelo separada
 modelo = joblib.load("modelo_passos_magicos_otimizado.pkl")
 
+st.write(df_ml.columns.tolist())
+
 # ==============================================================================
 # 2. MENU LATERAL - CONFIGURAÇÕES E INFORMAÇÕES
 # ==============================================================================
@@ -748,7 +750,6 @@ with aba2:
                 )
                 df_q9[col] = pd.to_numeric(df_q9[col], errors="coerce")
 
-        st.write(df_q9.columns.tolist())
     
         df_ml = df_q9.dropna(subset=features + [alvo]).copy()
     
