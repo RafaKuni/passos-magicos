@@ -695,155 +695,145 @@ with aba2:
         else:
             st.warning("A coluna correspondente ao INDE não foi identificada automaticamente no conjunto de dados para gerar este gráfico.")
 
-    with st.expander(
-    "9. Previsão de Risco com Machine Learning (Random Forest) - Quais padrões permitem identificar alunos em risco de defasagem?"
-    ):
-    
-        st.markdown("""
-        **Análise:** Foram comparados três algoritmos supervisionados
-        (Regressão Logística, Random Forest e Gradient Boosting).
-    
-        O **Random Forest** apresentou o melhor desempenho e foi escolhido
-        como modelo final para previsão do risco de defasagem no ano seguinte.
-        """)
-    
-        # ===============================
-        # BASE DE MODELAGEM
-        # ===============================
-    
-        df_q9 = df_ml.copy()
-        df_q9.columns = df_q9.columns.str.strip().str.lower()
-    
-        alvo = "Target_Defasagem_Ano_Seguinte"
-    
-        features = [
-            "inde",
-            "ian",
-            "ida",
-            "ieg",
-            "iaa",
-            "ips",
-            "ipp",
-            "ipv",
-            "fase",
-            "tempo_programa",
-            "delta_ida",
-            "delta_ieg",
-            "delta_inde",
-            "delta_ian",
-            "delta_iaa",
-            "delta_ips",
-            "delta_ipp",
-            "delta_ipv"
-        ]
-    
-        # Mantém apenas colunas existentes
-        features = [f for f in features if f in df_q9.columns]
-    
-        # Confere se o alvo existe
-        if alvo not in df_q9.columns:
-            st.error(f"A coluna '{alvo}' não existe na base_modelagem.csv")
-            st.stop()
-    
-        X = df_q9[features]
-        y = df_q9[alvo]
-    
-        # ===============================
-        # MESMO SPLIT DO NOTEBOOK
-        # ===============================
-    
-        X_train, X_test, y_train, y_test = train_test_split(
-            X,
-            y,
-            test_size=0.25,
-            random_state=42,
-            stratify=y
-        )
-    
-        # ===============================
-        # CARREGA O MODELO
-        # ===============================
-    
-        modelo = joblib.load("modelo_passos_magicos_otimizado.pkl")
-    
-        # ===============================
-        # PREVISÕES
-        # ===============================
-    
-        y_pred = modelo.predict(X_test)
-        y_prob = modelo.predict_proba(X_test)[:, 1]
-    
-        # ===============================
-        # MÉTRICAS
-        # ===============================
-    
-        auc = roc_auc_score(y_test, y_prob)
-        acc = accuracy_score(y_test, y_pred)
-        precision = precision_score(y_test, y_pred, zero_division=0)
-        recall = recall_score(y_test, y_pred, zero_division=0)
-        f1 = f1_score(y_test, y_pred, zero_division=0)
-    
-        c1, c2, c3, c4, c5 = st.columns(5)
-    
-        c1.metric("AUC", f"{auc:.2%}")
-        c2.metric("Accuracy", f"{acc:.2%}")
-        c3.metric("Precisão", f"{precision:.2%}")
-        c4.metric("Recall", f"{recall:.2%}")
-        c5.metric("F1", f"{f1:.2%}")
-    
-        # ===============================
-        # IMPORTÂNCIA DAS VARIÁVEIS
-        # ===============================
-    
-        importancia = pd.DataFrame({
-            "Indicador": [c.upper() for c in features],
-            "Importância": modelo.feature_importances_
-        }).sort_values("Importância")
-    
-        fig = px.bar(
-            importancia,
-            x="Importância",
-            y="Indicador",
-            orientation="h",
-            color="Importância",
-            color_continuous_scale="Viridis",
-            text="Importância",
-            title="Importância dos Indicadores para a Previsão do Risco"
-        )
-    
-        fig.update_traces(
-            texttemplate="%{text:.3f}",
-            textposition="outside"
-        )
-    
-        fig.update_layout(
-            coloraxis_showscale=False,
-            xaxis_title="Importância",
-            yaxis_title=""
-        )
-    
-        st.plotly_chart(fig, use_container_width=True)
-    
-        # ===============================
-        # TOP 10 RISCOS
-        # ===============================
-    
-        resultados = X_test.copy()
-    
-        resultados["Probabilidade"] = y_prob
-        resultados["Classe Real"] = y_test.values
-    
-        st.subheader("Top 10 maiores probabilidades de risco")
-    
-        st.dataframe(
-            resultados
-                .sort_values("Probabilidade", ascending=False)
-                .head(10)
-                .style.format({
-                    "Probabilidade": "{:.2%}"
-                }),
-            use_container_width=True
-        )
+     with st.expander(
+        "9. Previsão de Risco com Machine Learning (Random Forest) - Quais padrões permitem identificar alunos em risco de defasagem?"
+        ):
+        
+            st.markdown("""
+            **Análise:** Foram comparados três algoritmos supervisionados
+            (Regressão Logística, Random Forest e Gradient Boosting).
+        
+            O **Random Forest** apresentou o melhor desempenho e foi escolhido
+            como modelo final para previsão do risco de defasagem no ano seguinte.
+            """)
+        
+            # ===============================
+            # BASE DE MODELAGEM
+            # ===============================
+        
+            df_q9 = df_ml.copy()
+            
+            # Removemos a linha que forçava para minúsculo, mantendo o formato original
+            df_q9.columns = df_q9.columns.str.strip()
+        
+            # Usando o nome exato da coluna alvo
+            alvo = "Target_Defasagem_Ano_Seguinte"
+        
+            # Usando os nomes exatos das features como estão na base_modelagem
+            features = [
+                "INDE", "IAN", "IDA", "IEG", "IAA", "IPS", "IPP", "IPV",
+                "Fase", "Tempo_Programa",
+                "Delta_IDA", "Delta_IEG", "Delta_INDE", "Delta_IAN",
+                "Delta_IAA", "Delta_IPS", "Delta_IPP", "Delta_IPV"
+            ]
+        
+            # Mantém apenas colunas existentes
+            features = [f for f in features if f in df_q9.columns]
+        
+            # Confere se o alvo existe
+            if alvo not in df_q9.columns:
+                st.error(f"A coluna '{alvo}' não existe na base_modelagem.csv. Verifique se o sep=',' foi alterado no pd.read_csv lá no topo!")
+                st.stop()
+        
+            X = df_q9[features]
+            y = df_q9[alvo]
+        
+            # ===============================
+            # MESMO SPLIT DO NOTEBOOK
+            # ===============================
+        
+            X_train, X_test, y_train, y_test = train_test_split(
+                X,
+                y,
+                test_size=0.25,
+                random_state=42,
+                stratify=y
+            )
+        
+            # ===============================
+            # CARREGA O MODELO
+            # ===============================
+        
+            modelo = joblib.load("modelo_passos_magicos_otimizado.pkl")
+        
+            # ===============================
+            # PREVISÕES
+            # ===============================
+        
+            y_pred = modelo.predict(X_test)
+            y_prob = modelo.predict_proba(X_test)[:, 1]
+        
+            # ===============================
+            # MÉTRICAS
+            # ===============================
+        
+            auc = roc_auc_score(y_test, y_prob)
+            acc = accuracy_score(y_test, y_pred)
+            precision = precision_score(y_test, y_pred, zero_division=0)
+            recall = recall_score(y_test, y_pred, zero_division=0)
+            f1 = f1_score(y_test, y_pred, zero_division=0)
+        
+            c1, c2, c3, c4, c5 = st.columns(5)
+        
+            c1.metric("AUC", f"{auc:.2%}")
+            c2.metric("Accuracy", f"{acc:.2%}")
+            c3.metric("Precisão", f"{precision:.2%}")
+            c4.metric("Recall", f"{recall:.2%}")
+            c5.metric("F1", f"{f1:.2%}")
+        
+            # ===============================
+            # IMPORTÂNCIA DAS VARIÁVEIS
+            # ===============================
+        
+            importancia = pd.DataFrame({
+                "Indicador": [c.upper() for c in features],
+                "Importância": modelo.feature_importances_
+            }).sort_values("Importância")
+        
+            fig = px.bar(
+                importancia,
+                x="Importância",
+                y="Indicador",
+                orientation="h",
+                color="Importância",
+                color_continuous_scale="Viridis",
+                text="Importância",
+                title="Importância dos Indicadores para a Previsão do Risco"
+            )
+        
+            fig.update_traces(
+                texttemplate="%{text:.3f}",
+                textposition="outside"
+            )
+        
+            fig.update_layout(
+                coloraxis_showscale=False,
+                xaxis_title="Importância",
+                yaxis_title=""
+            )
+        
+            st.plotly_chart(fig, use_container_width=True)
+        
+            # ===============================
+            # TOP 10 RISCOS
+            # ===============================
+        
+            resultados = X_test.copy()
+        
+            resultados["Probabilidade"] = y_prob
+            resultados["Classe Real"] = y_test.values
+        
+            st.subheader("Top 10 maiores probabilidades de risco")
+        
+            st.dataframe(
+                resultados
+                    .sort_values("Probabilidade", ascending=False)
+                    .head(10)
+                    .style.format({
+                        "Probabilidade": "{:.2%}"
+                    }),
+                use_container_width=True
+            )
 
     with st.expander("10. Efetividade do programa - Os indicadores mostram melhora consistente ao longo do ciclo nas diferentes fases (Quartzo, Ágata, Ametista e Topázio), confirmando o impacto real do programa?"):
         st.markdown("""
