@@ -714,7 +714,7 @@ with aba2:
         df_q9 = df_ml.copy()
         df_q9.columns = df_q9.columns.str.strip().str.lower()
     
-        alvo = "target_defasagem_ano_seguinte"
+        alvo = "Target_Defasagem_Ano_Seguinte"
     
         features = [
             "inde",
