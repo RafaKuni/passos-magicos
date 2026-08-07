@@ -771,11 +771,13 @@ with aba2:
             # ===============================
             # IMPORTÂNCIA DAS VARIÁVEIS
             # ===============================
-    
+        
+            # Truque: Pegar o classificador (último passo do pipeline) automaticamente
+            nome_passo, classificador = modelo.steps[-1]
+            
             importancia = pd.DataFrame({
                 "Indicador": [c.upper() for c in features_esperadas],
-                # Acessando o Random Forest dentro do Pipeline
-                "Importância": modelo.named_steps["modelo"].feature_importances_
+                "Importância": classificador.feature_importances_
             }).sort_values("Importância")
         
             fig = px.bar(
