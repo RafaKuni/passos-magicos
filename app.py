@@ -61,7 +61,7 @@ if 'inde_ano' not in df.columns:
 # ==============================================================================
 # CARREGAMENTO DO MOTOR DE MACHINE LEARNING
 # ==============================================================================
-df_ml = pd.read_csv("base_modelagem.csv", sep=";") # Mantemos a leitura do modelo separada
+df_ml = pd.read_csv("base_modelagem.csv", sep=",")
 modelo = joblib.load("modelo_passos_magicos_otimizado.pkl")
 
 # ==============================================================================
