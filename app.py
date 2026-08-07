@@ -747,6 +747,8 @@ with aba2:
                     .str.replace(",", ".", regex=False)
                 )
                 df_q9[col] = pd.to_numeric(df_q9[col], errors="coerce")
+
+        st.write(df_q9.columns.tolist())
     
         df_ml = df_q9.dropna(subset=features + [alvo]).copy()
     
