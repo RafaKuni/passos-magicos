@@ -9,7 +9,7 @@ import plotly.figure_factory as ff
 import re
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import roc_auc_score
+from sklearn.metrics import roc_auc_score, accuracy_score, precision_score, recall_score, f1_score
 from sklearn.preprocessing import StandardScaler
 
 # ==============================================================================
