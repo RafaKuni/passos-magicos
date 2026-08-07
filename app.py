@@ -932,55 +932,61 @@ with aba2:
 with aba3:
     st.header("🔮 Simulador de Risco de Defasagem (Ano Seguinte)")
     
-    st.markdown("Insira os dados atuais do aluno e a variação ($\Delta$) em relação ao ano passado para prever a probabilidade de entrar em defasagem severa no próximo ano.")
+    st.markdown("Insira os indicadores atuais do aluno para prever a probabilidade de entrar em defasagem severa no próximo ano.")
     
     with st.form("sim"):
         c1, c2, c3 = st.columns(3)
         
         with c1:
-            st.markdown("**Perfil e Histórico**")
-            fase = st.number_input("Fase (Numérico)", 0.0, 10.0, 1.0, step=1.0)
-            tempo_prog = st.number_input("Tempo de Programa (Anos)", 1, 10, 2)
-            
-            st.markdown("**Variações Ano a Ano (Deltas)**")
-            delta_ida = st.number_input("Variação IDA (Delta)", -10.0, 10.0, 0.0, step=0.1)
-            delta_ieg = st.number_input("Variação IEG (Delta)", -10.0, 10.0, 0.0, step=0.1)
-            delta_inde = st.number_input("Variação INDE (Delta)", -10.0, 10.0, 0.0, step=0.1)
+            st.markdown("### 📘 Visão Geral")
+            fase = st.number_input("Fase (Numérico - Ex: 1 a 8)", 0.0, 10.0, 1.0, step=1.0)
+            inde = st.slider("INDE Atual (Nota Global)", 0.0, 10.0, 7.0, step=0.1)
+            ian = st.slider("IAN Atual (Adequação)", 0.0, 10.0, 7.0, step=0.1)
 
         with c2:
-            st.markdown("**Indicadores Principais**")
-            inde = st.slider("INDE Atual", 0.0, 10.0, 7.0, step=0.1)
-            ian = st.slider("IAN Atual", 0.0, 10.0, 7.0, step=0.1)
-            ida = st.slider("IDA Atual", 0.0, 10.0, 7.0, step=0.1)
-            ieg = st.slider("IEG Atual", 0.0, 10.0, 7.0, step=0.1)
+            st.markdown("### 📊 Desempenho")
+            ida = st.slider("IDA Atual (Acadêmico)", 0.0, 10.0, 7.0, step=0.1)
+            ieg = st.slider("IEG Atual (Engajamento)", 0.0, 10.0, 7.0, step=0.1)
+            iaa = st.slider("IAA Atual (Autoavaliação)", 0.0, 10.0, 7.0, step=0.1)
 
         with c3:
-            st.markdown("**Indicadores Complementares**")
-            iaa = st.slider("IAA Atual", 0.0, 10.0, 7.0, step=0.1)
-            ips = st.slider("IPS Atual", 0.0, 10.0, 7.0, step=0.1)
-            ipp = st.slider("IPP Atual", 0.0, 10.0, 7.0, step=0.1)
-            ipv = st.slider("IPV Atual", 0.0, 10.0, 7.0, step=0.1)
+            st.markdown("### 🧠 Psico / Social")
+            ips = st.slider("IPS Atual (Psicossocial)", 0.0, 10.0, 7.0, step=0.1)
+            ipp = st.slider("IPP Atual (Psicopedagógico)", 0.0, 10.0, 7.0, step=0.1)
+            ipv = st.slider("IPV Atual (Ponto de Virada)", 0.0, 10.0, 7.0, step=0.1)
 
-        if st.form_submit_button("ANALISAR RISCO"):
-            # O DataFrame agora inclui os Deltas com os nomes exatos exigidos pelo modelo
+        st.markdown("---")
+        
+        if st.form_submit_button("🚀 ANALISAR RISCO"):
+            # Monta o DataFrame apenas com as 9 features vencedoras do Random Forest
             in_df = pd.DataFrame({
                 'INDE': [inde], 'IAN': [ian], 'IDA': [ida], 'IEG': [ieg], 
                 'IAA': [iaa], 'IPS': [ips], 'IPP': [ipp], 'IPV': [ipv], 
-                'Fase': [fase], 'Tempo_Programa': [tempo_prog], 
-                'Delta_IDA': [delta_ida], 'Delta_IEG': [delta_ieg], 'Delta_INDE': [delta_inde]
+                'Fase': [fase]
             })
             
             try:
-                # Pegando a probabilidade da classe 1 (Risco)
-                prob = modelo.predict_proba(in_df)[0][1]
-                st.metric("Probabilidade de Risco", f"{prob*100:.1f}%")
+                # Blindagem master contra a ordem das colunas no Scikit-Learn
+                in_df = in_df[modelo.feature_names_in_]
                 
-                # Aplicando o Threshold
+                # Extraindo a probabilidade (Classe 1 = Risco)
+                prob = modelo.predict_proba(in_df)[0][1]
+                
+                # Exibindo o resultado em destaque
+                st.subheader("Resultado da Previsão")
+                st.metric("Probabilidade de Risco de Defasagem", f"{prob*100:.1f}%")
+                
+                # Escala de alertas visual
                 if prob >= 0.75: 
-                    st.error("🚨 ALTO RISCO (Intervenção Necessária)")
+                    st.error("🚨 **ALTO RISCO:** O modelo indica que este aluno precisa de intervenção pedagógica prioritária e imediata.")
+                elif prob >= 0.40:
+                    st.warning("⚠️ **ATENÇÃO:** Aluno em zona de transição. Recomendado acompanhamento preventivo de perto pela associação.")
                 else: 
-                    st.success("✅ ESTÁVEL (Risco Controlado)")
+                    st.success("✅ **ESTÁVEL:** Risco controlado. O aluno apresenta bons indicativos de progressão no programa.")
+                    
             except Exception as e:
-                st.error(f"Erro ao gerar predição. Verifique se os dados estão no formato correto. Detalhe: {e}")
+                st.error(f"Erro na hora de prever. Verifique se o arquivo .pkl foi atualizado corretamente com as 9 colunas. Detalhe técnico: {e}")
+
+st.markdown("---")
 
 st.caption("Associação Passos Mágicos | Datathon F5 FIAP Data Analytics")
