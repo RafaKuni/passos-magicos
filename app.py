@@ -695,10 +695,8 @@ with aba2:
         else:
             st.warning("A coluna correspondente ao INDE não foi identificada automaticamente no conjunto de dados para gerar este gráfico.")
 
-     with st.expander(
-        "9. Previsão de Risco com Machine Learning (Random Forest) - Quais padrões permitem identificar alunos em risco de defasagem?"
-        ):
-        
+    with st.expander("9. Previsão de Risco com Machine Learning (Random Forest) - Quais padrões permitem identificar alunos em risco de defasagem?"):
+            
             st.markdown("""
             **Análise:** Foram comparados três algoritmos supervisionados
             (Regressão Logística, Random Forest e Gradient Boosting).
