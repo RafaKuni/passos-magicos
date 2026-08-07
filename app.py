@@ -64,8 +64,6 @@ if 'inde_ano' not in df.columns:
 df_ml = pd.read_csv("base_modelagem.csv", sep=";") # Mantemos a leitura do modelo separada
 modelo = joblib.load("modelo_passos_magicos_otimizado.pkl")
 
-st.write(df_ml.columns.tolist())
-
 # ==============================================================================
 # 2. MENU LATERAL - CONFIGURAÇÕES E INFORMAÇÕES
 # ==============================================================================
@@ -697,64 +695,62 @@ with aba2:
         else:
             st.warning("A coluna correspondente ao INDE não foi identificada automaticamente no conjunto de dados para gerar este gráfico.")
 
-    with st.expander( "9. Previsão de Risco com Machine Learning (Random Forest) - Quais padrões nos indicadores permitem identificar alunos em risco antes de queda no desempenho ou aumento da defasagem?"):
-
+    with st.expander(
+    "9. Previsão de Risco com Machine Learning (Random Forest) - Quais padrões permitem identificar alunos em risco de defasagem?"
+    ):
+    
         st.markdown("""
         **Análise:** Foram comparados três algoritmos supervisionados
-        (Regressão Logística, Random Forest e Gradient Boosting) para prever
-        o risco de um aluno apresentar defasagem no ano seguinte.
+        (Regressão Logística, Random Forest e Gradient Boosting).
     
-        O **Random Forest** apresentou o melhor desempenho preditivo,
-        sendo adotado como modelo final da aplicação.
+        O **Random Forest** apresentou o melhor desempenho e foi escolhido
+        como modelo final para previsão do risco de defasagem no ano seguinte.
         """)
     
-        # ===========================
-        # PREPARAÇÃO DOS DADOS
-        # ===========================
+        # ===============================
+        # BASE DE MODELAGEM
+        # ===============================
     
-        df_q9 = df.copy()
+        df_q9 = df_ml.copy()
         df_q9.columns = df_q9.columns.str.strip().str.lower()
-    
-        features = [
-            'inde',
-            'ian',
-            'ida',
-            'ieg',
-            'iaa',
-            'ips',
-            'ipp',
-            'ipv',
-            'fase',
-            'tempo_programa',
-            'delta_ida',
-            'delta_ieg',
-            'delta_inde',
-            'delta_ian',
-            'delta_iaa',
-            'delta_ips',
-            'delta_ipp',
-            'delta_ipv'
-        ]
     
         alvo = "target_defasagem_ano_seguinte"
     
-        # mantém apenas colunas existentes
-        features = [c for c in features if c in df_q9.columns]
+        features = [
+            "inde",
+            "ian",
+            "ida",
+            "ieg",
+            "iaa",
+            "ips",
+            "ipp",
+            "ipv",
+            "fase",
+            "tempo_programa",
+            "delta_ida",
+            "delta_ieg",
+            "delta_inde",
+            "delta_ian",
+            "delta_iaa",
+            "delta_ips",
+            "delta_ipp",
+            "delta_ipv"
+        ]
     
-        for col in features + [alvo]:
-            if col in df_q9.columns:
-                df_q9[col] = (
-                    df_q9[col]
-                    .astype(str)
-                    .str.replace(",", ".", regex=False)
-                )
-                df_q9[col] = pd.to_numeric(df_q9[col], errors="coerce")
-
+        # Mantém apenas colunas existentes
+        features = [f for f in features if f in df_q9.columns]
     
-        df_ml = df_q9.dropna(subset=features + [alvo]).copy()
+        # Confere se o alvo existe
+        if alvo not in df_q9.columns:
+            st.error(f"A coluna '{alvo}' não existe na base_modelagem.csv")
+            st.stop()
     
-        X = df_ml[features]
-        y = df_ml[alvo]
+        X = df_q9[features]
+        y = df_q9[alvo]
+    
+        # ===============================
+        # MESMO SPLIT DO NOTEBOOK
+        # ===============================
     
         X_train, X_test, y_train, y_test = train_test_split(
             X,
@@ -764,22 +760,22 @@ with aba2:
             stratify=y
         )
     
-        # ===========================
-        # CARREGAR MODELO
-        # ===========================
+        # ===============================
+        # CARREGA O MODELO
+        # ===============================
     
         modelo = joblib.load("modelo_passos_magicos_otimizado.pkl")
     
-        # ===========================
+        # ===============================
         # PREVISÕES
-        # ===========================
+        # ===============================
     
         y_pred = modelo.predict(X_test)
         y_prob = modelo.predict_proba(X_test)[:, 1]
     
-        # ===========================
+        # ===============================
         # MÉTRICAS
-        # ===========================
+        # ===============================
     
         auc = roc_auc_score(y_test, y_prob)
         acc = accuracy_score(y_test, y_pred)
@@ -795,56 +791,57 @@ with aba2:
         c4.metric("Recall", f"{recall:.2%}")
         c5.metric("F1", f"{f1:.2%}")
     
-        # ===========================
+        # ===============================
         # IMPORTÂNCIA DAS VARIÁVEIS
-        # ===========================
+        # ===============================
     
         importancia = pd.DataFrame({
             "Indicador": [c.upper() for c in features],
             "Importância": modelo.feature_importances_
         }).sort_values("Importância")
     
-        fig9 = px.bar(
+        fig = px.bar(
             importancia,
             x="Importância",
             y="Indicador",
             orientation="h",
-            text="Importância",
             color="Importância",
             color_continuous_scale="Viridis",
-            title="Importância dos Indicadores na Previsão de Risco"
+            text="Importância",
+            title="Importância dos Indicadores para a Previsão do Risco"
         )
     
-        fig9.update_traces(
+        fig.update_traces(
             texttemplate="%{text:.3f}",
             textposition="outside"
         )
     
-        fig9.update_layout(
+        fig.update_layout(
             coloraxis_showscale=False,
             xaxis_title="Importância",
             yaxis_title=""
         )
     
-        st.plotly_chart(fig9, use_container_width=True)
+        st.plotly_chart(fig, use_container_width=True)
     
-        # ===========================
-        # TOP 10 MAIORES RISCOS
-        # ===========================
+        # ===============================
+        # TOP 10 RISCOS
+        # ===============================
     
         resultados = X_test.copy()
-        resultados["Probabilidade de Risco"] = y_prob
-        resultados["Risco Real"] = y_test.values
+    
+        resultados["Probabilidade"] = y_prob
+        resultados["Classe Real"] = y_test.values
     
         st.subheader("Top 10 maiores probabilidades de risco")
     
         st.dataframe(
             resultados
-            .sort_values("Probabilidade de Risco", ascending=False)
-            .head(10)
-            .style.format({
-                "Probabilidade de Risco": "{:.2%}"
-            }),
+                .sort_values("Probabilidade", ascending=False)
+                .head(10)
+                .style.format({
+                    "Probabilidade": "{:.2%}"
+                }),
             use_container_width=True
         )
 
