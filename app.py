@@ -706,34 +706,33 @@ with aba2:
             """)
         
             # ===============================
+            # CARREGA O MODELO (Puxamos para cima!)
+            # ===============================
+        
+            modelo = joblib.load("modelo_passos_magicos_otimizado.pkl")
+    
+            # ===============================
             # BASE DE MODELAGEM
             # ===============================
         
             df_q9 = df_ml.copy()
-            
-            # Removemos a linha que forçava para minúsculo, mantendo o formato original
             df_q9.columns = df_q9.columns.str.strip()
         
-            # Usando o nome exato da coluna alvo
+            # A MÁGICA: O modelo nos diz exatamente as colunas e a ordem que ele exige
+            features_esperadas = list(modelo.feature_names_in_)
             alvo = "Target_Defasagem_Ano_Seguinte"
         
-            # Usando os nomes exatos das features como estão na base_modelagem
-            features = [
-                "INDE", "IAN", "IDA", "IEG", "IAA", "IPS", "IPP", "IPV",
-                "Fase", "Tempo_Programa",
-                "Delta_IDA", "Delta_IEG", "Delta_INDE", "Delta_IAN",
-                "Delta_IAA", "Delta_IPS", "Delta_IPP", "Delta_IPV"
-            ]
+            # Dicionário inteligente para mapear as colunas independente se estão minúsculas ou não
+            mapa_colunas = {c.lower(): c for c in df_q9.columns}
+            renomeios = {}
+            for feat in features_esperadas + [alvo]:
+                if feat.lower() in mapa_colunas:
+                    renomeios[mapa_colunas[feat.lower()]] = feat
+                    
+            df_q9.rename(columns=renomeios, inplace=True)
         
-            # Mantém apenas colunas existentes
-            features = [f for f in features if f in df_q9.columns]
-        
-            # Confere se o alvo existe
-            if alvo not in df_q9.columns:
-                st.error(f"A coluna '{alvo}' não existe na base_modelagem.csv. Verifique se o sep=',' foi alterado no pd.read_csv lá no topo!")
-                st.stop()
-        
-            X = df_q9[features]
+            # Filtra o X e y com a ordem exata exigida pelo modelo
+            X = df_q9[features_esperadas]
             y = df_q9[alvo]
         
             # ===============================
@@ -741,18 +740,8 @@ with aba2:
             # ===============================
         
             X_train, X_test, y_train, y_test = train_test_split(
-                X,
-                y,
-                test_size=0.25,
-                random_state=42,
-                stratify=y
+                X, y, test_size=0.25, random_state=42, stratify=y
             )
-        
-            # ===============================
-            # CARREGA O MODELO
-            # ===============================
-        
-            modelo = joblib.load("modelo_passos_magicos_otimizado.pkl")
         
             # ===============================
             # PREVISÕES
