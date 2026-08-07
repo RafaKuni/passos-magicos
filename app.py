@@ -772,13 +772,20 @@ with aba2:
             # IMPORTÂNCIA DAS VARIÁVEIS
             # ===============================
         
-            # Truque: Pegar o classificador (último passo do pipeline) automaticamente
+            # Pega o classificador (último passo do pipeline) automaticamente
             nome_passo, classificador = modelo.steps[-1]
             
+            # Como garantimos que é o Random Forest, puxamos a importância diretamente:
+            try:
+                valores_importancia = classificador.feature_importances_
+            except AttributeError:
+                 st.error("O modelo carregado não possui 'feature_importances_'. Certifique-se de que é um modelo baseado em árvores.")
+                 st.stop()
+                
             importancia = pd.DataFrame({
                 "Indicador": [c.upper() for c in features_esperadas],
-                "Importância": classificador.feature_importances_
-            }).sort_values("Importância")
+                "Importância": valores_importancia
+            }).sort_values("Importância", ascending=True)
         
             fig = px.bar(
                 importancia,
