@@ -489,8 +489,7 @@ with aba2:
 
     with st.expander("6. Aspectos psicopedagógicos (IPP) - As avaliações psicopedagógicas (IPP) confirmam ou contradizem a defasagem identificada pelo IAN?"):
         st.markdown("""
-        **Análise:** As avaliações psicopedagógicas (IPP) são comparadas com os níveis de defasagem dos alunos 
-        para entender se a avaliação profissional de desenvolvimento corrobora com o atraso acadêmico medido.
+        **Análise:** A avaliação psicopedagógica média apresenta redução consistente conforme o nível de defasagem se aprofunda, passando de 7,68 pontos entre os alunos classificados como Em Fase para 7,01 pontos entre os alunos em Defasagem Severa. Esse comportamento confirma qualitativamente a direção indicada pelo IAN. Contudo, a magnitude da variação é relativamente pequena diante da amplitude dos grupos analisados, e a distribuição das notas apresenta sobreposição relevante entre as categorias, o que sugere que o IPP capta uma dimensão complementar do desenvolvimento do aluno, e não uma simples reprodução do indicador de adequação de nível..
         """)
 
         # 1. Limpeza rápida e padronização (tudo minúsculo para o df)
@@ -565,7 +564,7 @@ with aba2:
 
     with st.expander("7. Ponto de Virada (IPV) - Quais comportamentos - acadêmicos, emocionais ou de engajamento - mais influenciam o IPV ao longo do tempo?"):
         st.markdown("""
-        **Análise:** A avaliação psicopedagógica média apresenta redução consistente conforme o nível de defasagem se aprofunda, passando de 7,68 pontos entre os alunos classificados como Em Fase para 7,01 pontos entre os alunos em Defasagem Severa. Esse comportamento confirma qualitativamente a direção indicada pelo IAN. Contudo, a magnitude da variação é relativamente pequena diante da amplitude dos grupos analisados, e a distribuição das notas apresenta sobreposição relevante entre as categorias, o que sugere que o IPP capta uma dimensão complementar do desenvolvimento do aluno, e não uma simples reprodução do indicador de adequação de nível.
+        **Análise:** A análise de correlação com o Ponto de Virada (IPV) revela o Indicador Psicopedagógico (IPP) como o de maior influência (r = 0,61), seguido de perto pelo Engajamento (IEG) e pelo Desempenho Acadêmico (IDA), ambos com r = 0,56. A Autoavaliação (IAA) apresenta influência marginal (r = 0,06), enquanto o Indicador Psicossocial (IPS) não demonstra relação relevante (r próximo de zero). Esses resultados indicam que o suporte psicopedagógico constitui o principal fator associado à transformação de trajetória do aluno, superando inclusive indicadores tradicionalmente associados a desempenho e engajamento, reforçando sua centralidade nas estratégias de intervenção da Associação.
         """)
 
         # 1. Preparar os dados (garantindo conversão e minúsculas para o app)
@@ -622,8 +621,7 @@ with aba2:
 
     with st.expander("8. Multidimensionalidade dos indicadores - Quais combinações de indicadores (IDA + IEG + IPS + IPP) elevam mais a nota global do aluno (INDE)?"):
         st.markdown("""
-        **Análise:** Avaliamos como o acúmulo de pilares de destaque (alunos que ficam acima da mediana 
-        em IDA, IEG, IPS e IPP simultaneamente) impacta diretamente na sua Nota Global (INDE).
+        **Análise:** A análise demonstra um efeito cumulativo e consistente entre o número de pilares em destaque (IDA, IEG, IPS e IPP acima da mediana) e a Nota Global do aluno (INDE). Alunos sem nenhum pilar em destaque apresentam INDE médio de 5,95 pontos, enquanto aqueles que se destacam simultaneamente nos quatro indicadores atingem média de 8,40 pontos, uma diferença superior a 2,4 pontos. A progressão praticamente linear entre os grupos evidencia que indicadores com baixa correlação individual, como o Indicador Psicossocial, adquirem relevância significativa quando combinados aos demais pilares. Esse resultado reforça a importância de estratégias de intervenção multidimensionais, que atuem simultaneamente sobre diferentes frentes do desenvolvimento do aluno, em detrimento de ações pontuais e isoladas.
         """)
 
         # 1. Preparar cópia e limpar colunas (tudo em minúsculo)
@@ -697,94 +695,137 @@ with aba2:
         else:
             st.warning("A coluna correspondente ao INDE não foi identificada automaticamente no conjunto de dados para gerar este gráfico.")
 
-    with st.expander("9. Previsão de Risco com Machine Learning (Regressão Logística) - Quais padrões nos indicadores permitem identificar alunos em risco antes de queda no desempenho ou aumento da defasagem?"):
+    with st.expander(
+        "9. Previsão de Risco com Machine Learning (Regressão Logística) - Quais padrões nos indicadores permitem identificar alunos em risco antes de queda no desempenho ou aumento da defasagem?"
+    ):
+    
         st.markdown("""
-        **Análise:** Construímos um modelo preditivo baseado em **Regressão Logística** para identificar a probabilidade 
-        de um aluno entrar em risco de defasagem (`Defasagem < 0`) com base em seus pilares (IDA, IEG, IPS, IAA, IPP).
+        **Análise:** Utilizamos um modelo de **Regressão Logística** para estimar a probabilidade
+        de um aluno apresentar risco de defasagem (`Defasagem < 0`) a partir dos indicadores
+        **IDA, IEG, IPS, IAA e IPP**.
         """)
-                
-        # 1. Preparar cópia e limpar colunas (tudo em minúsculo)
+    
         df_q9 = df.copy()
-        df_q9.columns = [str(col).strip().lower() for col in df_q9.columns]
-
-        cols_features = ['ida', 'ieg', 'ips', 'iaa', 'ipp']
-        cols_necessarias = cols_features + ['defasagem']
-
-        # Tratamento de dados (vírgula para ponto e conversão numérica)
-        for col in cols_necessarias:
-            if col in df_q9.columns:
-                df_q9[col] = df_q9[col].astype(str).str.replace(',', '.')
-                df_q9[col] = pd.to_numeric(df_q9[col], errors='coerce')
-
-        if all(c in df_q9.columns for c in cols_necessarias):
-            df_ml = df_q9.dropna(subset=cols_necessarias).copy()
-            df_ml['alvo_risco'] = (df_ml['defasagem'] < 0).astype(int)
-
-            X = df_ml[cols_features]
-            y = df_ml['alvo_risco']
-
-            if len(df_ml) > 10 and y.nunique() > 1:
-                # 2. Divisão treino e teste
-                X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
-
-                # 3. Normalização das features (StandardScaler)
-                scaler = StandardScaler()
-                X_train_scaled = scaler.fit_transform(X_train)
-                X_test_scaled = scaler.transform(X_test)
-
-                # 4. Modelo de Regressão Logística com pesos balanceados
-                modelo_lr = LogisticRegression(random_state=42, class_weight='balanced')
-                modelo_lr.fit(X_train_scaled, y_train)
-
-                y_pred = modelo_lr.predict(X_test_scaled)
-                y_proba = modelo_lr.predict_proba(X_test_scaled)[:, 1]
-
-                # 5. Organizar os coeficientes para visualização no Plotly
-                importancias = pd.DataFrame({
-                    'Indicador': [c.upper() for c in X.columns],
-                    'Coeficiente': modelo_lr.coef_[0]
-                }).sort_values(by='Coeficiente', ascending=True)
-
-                fig9 = px.bar(
-                    importancias,
-                    x='Coeficiente',
-                    y='Indicador',
-                    orientation='h',
-                    text=importancias['Coeficiente'].apply(lambda x: f'{x:.3f}'),
-                    title='Padrões de Risco: Impacto dos Indicadores na Probabilidade de Defasagem<br><sup>(Regressão Logística Padronizada)</sup>',
-                    color='Coeficiente',
-                    color_continuous_scale='RdBu_r'
-                )
-                
-                fig9.update_layout(
-                    xaxis_title="Coeficiente Padronizado (Impacto no Risco)",
-                    yaxis_title="Indicadores",
-                    coloraxis_showscale=False
-                )
-                fig9.update_traces(textposition='outside', textfont=dict(size=12, weight='bold'))
-                
-                st.plotly_chart(fig9, use_container_width=True)
-
-                # 6. Métricas de Performance do Modelo
-                auc_score = roc_auc_score(y_test, y_proba)
-                st.markdown(f"🎯 **Performance do Modelo (AUC-ROC Score):** `{auc_score:.4f}`")
-
-                # 7. Tabela de Alunos em Maior Risco
-                df_resultados = X_test.copy()
-                df_resultados['Probabilidade_Risco'] = y_proba
-                df_resultados['Status_Risco_Real'] = y_test
-                
-                st.markdown("##### 🚨 Top Alunos com Maior Probabilidade de Risco no Teste")
-                st.dataframe(
-                    df_resultados.sort_values(by='Probabilidade_Risco', ascending=False).head(10).style.format({
-                        'Probabilidade_Risco': '{:.2%}'
-                    }), 
-                    use_container_width=True
-                )
-            else:
-                st.warning("O conjunto de dados filtrado não possui variação suficiente na variável alvo para treinar o modelo.")
-        else:
-            st.warning("As colunas necessárias para o modelo preditivo não foram encontradas.")
+        df_q9.columns = df_q9.columns.str.strip().str.lower()
+    
+        features = ['ida', 'ieg', 'ips', 'iaa', 'ipp']
+        alvo = 'defasagem'
+    
+        for col in features + [alvo]:
+            df_q9[col] = (
+                df_q9[col]
+                .astype(str)
+                .str.replace(",", ".", regex=False)
+            )
+            df_q9[col] = pd.to_numeric(df_q9[col], errors="coerce")
+    
+        df_ml = df_q9.dropna(subset=features + [alvo]).copy()
+    
+        df_ml["alvo_risco"] = (df_ml["defasagem"] < 0).astype(int)
+    
+        X = df_ml[features]
+        y = df_ml["alvo_risco"]
+    
+        if len(df_ml) < 20 or y.nunique() < 2:
+            st.warning("Não há dados suficientes para treinar o modelo.")
+            st.stop()
+    
+        X_train, X_test, y_train, y_test = train_test_split(
+            X,
+            y,
+            test_size=0.30,
+            random_state=42,
+            stratify=y
+        )
+    
+        scaler = StandardScaler()
+    
+        X_train = scaler.fit_transform(X_train)
+        X_test = scaler.transform(X_test)
+    
+        modelo_lr = LogisticRegression(
+            random_state=42,
+            class_weight="balanced",
+            max_iter=1000
+        )
+    
+        modelo_lr.fit(X_train, y_train)
+    
+        y_pred = modelo_lr.predict(X_test)
+        y_prob = modelo_lr.predict_proba(X_test)[:, 1]
+    
+        # -------------------------
+        # MÉTRICAS
+        # -------------------------
+    
+        auc = roc_auc_score(y_test, y_prob)
+        acc = accuracy_score(y_test, y_pred)
+        precision = precision_score(y_test, y_pred, zero_division=0)
+        recall = recall_score(y_test, y_pred, zero_division=0)
+        f1 = f1_score(y_test, y_pred, zero_division=0)
+    
+        col1, col2, col3, col4, col5 = st.columns(5)
+    
+        col1.metric("AUC", f"{auc:.2%}")
+        col2.metric("Accuracy", f"{acc:.2%}")
+        col3.metric("Precisão", f"{precision:.2%}")
+        col4.metric("Recall", f"{recall:.2%}")
+        col5.metric("F1", f"{f1:.2%}")
+    
+        # -------------------------
+        # IMPORTÂNCIA DOS INDICADORES
+        # -------------------------
+    
+        coef = pd.DataFrame({
+            "Indicador": [c.upper() for c in features],
+            "Coeficiente": modelo_lr.coef_[0]
+        }).sort_values("Coeficiente")
+    
+        fig9 = px.bar(
+            coef,
+            x="Coeficiente",
+            y="Indicador",
+            orientation="h",
+            text="Coeficiente",
+            color="Coeficiente",
+            color_continuous_scale="RdBu_r",
+            title="Impacto dos Indicadores na Probabilidade de Defasagem"
+        )
+    
+        fig9.update_traces(
+            texttemplate="%{text:.3f}",
+            textposition="outside"
+        )
+    
+        fig9.update_layout(
+            coloraxis_showscale=False,
+            xaxis_title="Coeficiente Padronizado",
+            yaxis_title=""
+        )
+    
+        st.plotly_chart(fig9, use_container_width=True)
+    
+        # -------------------------
+        # ALUNOS COM MAIOR RISCO
+        # -------------------------
+    
+        resultados = X_test.copy()
+        resultados = pd.DataFrame(resultados, columns=features)
+    
+        resultados["Probabilidade de Risco"] = y_prob
+        resultados["Risco Real"] = y_test.reset_index(drop=True)
+    
+        st.subheader("Top 10 maiores probabilidades de risco")
+    
+        st.dataframe(
+            resultados.sort_values(
+                "Probabilidade de Risco",
+                ascending=False
+            ).head(10).style.format({
+                "Probabilidade de Risco": "{:.2%}"
+            }),
+            use_container_width=True
+        )
 
 
     with st.expander("10. Efetividade do programa - Os indicadores mostram melhora consistente ao longo do ciclo nas diferentes fases (Quartzo, Ágata, Ametista e Topázio), confirmando o impacto real do programa?"):
