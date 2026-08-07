@@ -696,137 +696,156 @@ with aba2:
             st.warning("A coluna correspondente ao INDE não foi identificada automaticamente no conjunto de dados para gerar este gráfico.")
 
     with st.expander(
-        "9. Previsão de Risco com Machine Learning (Regressão Logística) - Quais padrões nos indicadores permitem identificar alunos em risco antes de queda no desempenho ou aumento da defasagem?"
-    ):
-    
-        st.markdown("""
-        **Análise:** Utilizamos um modelo de **Regressão Logística** para estimar a probabilidade
-        de um aluno apresentar risco de defasagem (`Defasagem < 0`) a partir dos indicadores
-        **IDA, IEG, IPS, IAA e IPP**.
-        """)
-    
-        df_q9 = df.copy()
-        df_q9.columns = df_q9.columns.str.strip().str.lower()
-    
-        features = ['ida', 'ieg', 'ips', 'iaa', 'ipp']
-        alvo = 'defasagem'
-    
-        for col in features + [alvo]:
+    "9. Previsão de Risco com Machine Learning (Random Forest) - Quais padrões nos indicadores permitem identificar alunos em risco antes de queda no desempenho ou aumento da defasagem?"
+):
+
+    st.markdown("""
+    **Análise:** Foram comparados três algoritmos supervisionados
+    (Regressão Logística, Random Forest e Gradient Boosting) para prever
+    o risco de um aluno apresentar defasagem no ano seguinte.
+
+    O **Random Forest** apresentou o melhor desempenho preditivo,
+    sendo adotado como modelo final da aplicação.
+    """)
+
+    # ===========================
+    # PREPARAÇÃO DOS DADOS
+    # ===========================
+
+    df_q9 = df.copy()
+    df_q9.columns = df_q9.columns.str.strip().str.lower()
+
+    features = [
+        'inde',
+        'ian',
+        'ida',
+        'ieg',
+        'iaa',
+        'ips',
+        'ipp',
+        'ipv',
+        'fase',
+        'tempo_programa',
+        'delta_ida',
+        'delta_ieg',
+        'delta_inde',
+        'delta_ian',
+        'delta_iaa',
+        'delta_ips',
+        'delta_ipp',
+        'delta_ipv'
+    ]
+
+    alvo = "target_defasagem_ano_seguinte"
+
+    # mantém apenas colunas existentes
+    features = [c for c in features if c in df_q9.columns]
+
+    for col in features + [alvo]:
+        if col in df_q9.columns:
             df_q9[col] = (
                 df_q9[col]
                 .astype(str)
                 .str.replace(",", ".", regex=False)
             )
             df_q9[col] = pd.to_numeric(df_q9[col], errors="coerce")
-    
-        df_ml = df_q9.dropna(subset=features + [alvo]).copy()
-    
-        df_ml["alvo_risco"] = (df_ml["defasagem"] < 0).astype(int)
-    
-        X = df_ml[features]
-        y = df_ml["alvo_risco"]
-    
-        if len(df_ml) < 20 or y.nunique() < 2:
-            st.warning("Não há dados suficientes para treinar o modelo.")
-            st.stop()
-    
-        X_train, X_test, y_train, y_test = train_test_split(
-            X,
-            y,
-            test_size=0.30,
-            random_state=42,
-            stratify=y
-        )
-    
-        scaler = StandardScaler()
-    
-        X_train = scaler.fit_transform(X_train)
-        X_test = scaler.transform(X_test)
-    
-        modelo_lr = LogisticRegression(
-            random_state=42,
-            class_weight="balanced",
-            max_iter=1000
-        )
-    
-        modelo_lr.fit(X_train, y_train)
-    
-        y_pred = modelo_lr.predict(X_test)
-        y_prob = modelo_lr.predict_proba(X_test)[:, 1]
-    
-        # -------------------------
-        # MÉTRICAS
-        # -------------------------
-    
-        auc = roc_auc_score(y_test, y_prob)
-        acc = accuracy_score(y_test, y_pred)
-        precision = precision_score(y_test, y_pred, zero_division=0)
-        recall = recall_score(y_test, y_pred, zero_division=0)
-        f1 = f1_score(y_test, y_pred, zero_division=0)
-    
-        col1, col2, col3, col4, col5 = st.columns(5)
-    
-        col1.metric("AUC", f"{auc:.2%}")
-        col2.metric("Accuracy", f"{acc:.2%}")
-        col3.metric("Precisão", f"{precision:.2%}")
-        col4.metric("Recall", f"{recall:.2%}")
-        col5.metric("F1", f"{f1:.2%}")
-    
-        # -------------------------
-        # IMPORTÂNCIA DOS INDICADORES
-        # -------------------------
-    
-        coef = pd.DataFrame({
-            "Indicador": [c.upper() for c in features],
-            "Coeficiente": modelo_lr.coef_[0]
-        }).sort_values("Coeficiente")
-    
-        fig9 = px.bar(
-            coef,
-            x="Coeficiente",
-            y="Indicador",
-            orientation="h",
-            text="Coeficiente",
-            color="Coeficiente",
-            color_continuous_scale="RdBu_r",
-            title="Impacto dos Indicadores na Probabilidade de Defasagem"
-        )
-    
-        fig9.update_traces(
-            texttemplate="%{text:.3f}",
-            textposition="outside"
-        )
-    
-        fig9.update_layout(
-            coloraxis_showscale=False,
-            xaxis_title="Coeficiente Padronizado",
-            yaxis_title=""
-        )
-    
-        st.plotly_chart(fig9, use_container_width=True)
-    
-        # -------------------------
-        # ALUNOS COM MAIOR RISCO
-        # -------------------------
-    
-        resultados = X_test.copy()
-        resultados = pd.DataFrame(resultados, columns=features)
-    
-        resultados["Probabilidade de Risco"] = y_prob
-        resultados["Risco Real"] = y_test.reset_index(drop=True)
-    
-        st.subheader("Top 10 maiores probabilidades de risco")
-    
-        st.dataframe(
-            resultados.sort_values(
-                "Probabilidade de Risco",
-                ascending=False
-            ).head(10).style.format({
-                "Probabilidade de Risco": "{:.2%}"
-            }),
-            use_container_width=True
-        )
 
+    df_ml = df_q9.dropna(subset=features + [alvo]).copy()
+
+    X = df_ml[features]
+    y = df_ml[alvo]
+
+    X_train, X_test, y_train, y_test = train_test_split(
+        X,
+        y,
+        test_size=0.25,
+        random_state=42,
+        stratify=y
+    )
+
+    # ===========================
+    # CARREGAR MODELO
+    # ===========================
+
+    modelo = joblib.load("modelo_passos_magicos_otimizado.pkl")
+
+    # ===========================
+    # PREVISÕES
+    # ===========================
+
+    y_pred = modelo.predict(X_test)
+    y_prob = modelo.predict_proba(X_test)[:, 1]
+
+    # ===========================
+    # MÉTRICAS
+    # ===========================
+
+    auc = roc_auc_score(y_test, y_prob)
+    acc = accuracy_score(y_test, y_pred)
+    precision = precision_score(y_test, y_pred, zero_division=0)
+    recall = recall_score(y_test, y_pred, zero_division=0)
+    f1 = f1_score(y_test, y_pred, zero_division=0)
+
+    c1, c2, c3, c4, c5 = st.columns(5)
+
+    c1.metric("AUC", f"{auc:.2%}")
+    c2.metric("Accuracy", f"{acc:.2%}")
+    c3.metric("Precisão", f"{precision:.2%}")
+    c4.metric("Recall", f"{recall:.2%}")
+    c5.metric("F1", f"{f1:.2%}")
+
+    # ===========================
+    # IMPORTÂNCIA DAS VARIÁVEIS
+    # ===========================
+
+    importancia = pd.DataFrame({
+        "Indicador": [c.upper() for c in features],
+        "Importância": modelo.feature_importances_
+    }).sort_values("Importância")
+
+    fig9 = px.bar(
+        importancia,
+        x="Importância",
+        y="Indicador",
+        orientation="h",
+        text="Importância",
+        color="Importância",
+        color_continuous_scale="Viridis",
+        title="Importância dos Indicadores na Previsão de Risco"
+    )
+
+    fig9.update_traces(
+        texttemplate="%{text:.3f}",
+        textposition="outside"
+    )
+
+    fig9.update_layout(
+        coloraxis_showscale=False,
+        xaxis_title="Importância",
+        yaxis_title=""
+    )
+
+    st.plotly_chart(fig9, use_container_width=True)
+
+    # ===========================
+    # TOP 10 MAIORES RISCOS
+    # ===========================
+
+    resultados = X_test.copy()
+    resultados["Probabilidade de Risco"] = y_prob
+    resultados["Risco Real"] = y_test.values
+
+    st.subheader("Top 10 maiores probabilidades de risco")
+
+    st.dataframe(
+        resultados
+        .sort_values("Probabilidade de Risco", ascending=False)
+        .head(10)
+        .style.format({
+            "Probabilidade de Risco": "{:.2%}"
+        }),
+        use_container_width=True
+    )
 
     with st.expander("10. Efetividade do programa - Os indicadores mostram melhora consistente ao longo do ciclo nas diferentes fases (Quartzo, Ágata, Ametista e Topázio), confirmando o impacto real do programa?"):
         st.markdown("""
