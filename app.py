@@ -768,12 +768,9 @@ with aba2:
             c4.metric("Recall", f"{recall:.2%}")
             c5.metric("F1", f"{f1:.2%}")
         
-            # ===============================
-            # IMPORTÂNCIA DAS VARIÁVEIS
-            # ===============================
         
             importancia = pd.DataFrame({
-                "Indicador": [c.upper() for c in features],
+                "Indicador": [c.upper() for c in features_esperadas],
                 "Importância": modelo.feature_importances_
             }).sort_values("Importância")
         
